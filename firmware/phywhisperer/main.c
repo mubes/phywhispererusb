@@ -9,9 +9,17 @@
 #include "usb.h"
 #include "sysclk.h"
 #include <string.h>
+#include "report.h"
 
 //Serial Number - will be read by device ID
 char usb_serial_number[33] = "000000000000DEADBEEF";
+
+
+bool main_extra_string(void);
+void phywhisperer_no_pwr(void);
+void phywhisperer_5V_pwr(void);
+void phywhisperer_host_pwr(void);
+void phywhisperer_switch_usb_pwr(void);
 
 void phywhisperer_no_pwr(void)
 {
@@ -42,7 +50,54 @@ void phywhisperer_switch_usb_pwr(void)
     }
 }
 
-uint8_t pwr_st_from_io(void)
+bool main_cdc_enable(uint8_t port)
+{
+    DBG("CDC Enable" EOL);
+    return true;
+}
+
+void main_cdc_disable(uint8_t port)
+{
+    DBG("CDC Disable" EOL);
+}
+
+void main_cdc_set_dtr(uint8_t port, bool b_enable)
+{
+    DBG("Set DTR %d" EOL, b_enable);
+}
+
+bool main_generic_enable(void)
+{
+//        main_b_generic_enable = true;
+    DBG("Generic enable" EOL);
+    return true;
+}
+
+void main_generic_disable(void)
+{
+    DBG("Generic disable" EOL);
+//        main_b_generic_enable = false;
+}
+
+void main_hid_set_feature(uint8_t* r)
+{
+DBG("Set feature" EOL);
+        if (r[0] == 0xAA && r[1] == 0x55
+                        && r[2] == 0xAA && r[3] == 0x55) {
+                // Disconnect USB Device
+                udc_stop();
+                ui_powerdown();
+        }
+}
+
+bool main_hid_report_out( void *ptr)
+
+{
+    DBG("HID Report out" EOL);
+ return true;
+}
+
+static uint8_t pwr_st_from_io(void)
 {
     if (!(PIOA->PIO_ODSR & (1 << F_VBHOST)) && !(PIOA->PIO_ODSR & (1 << F_VB5V))) {
         //USB off
@@ -120,6 +175,81 @@ void phywhisperer_setup_pins(void)
                  | SMC_MODE_DBW_BIT_8);
 }
 
+bool main_extra_string(void)
+{
+        static uint8_t udi_cdc_name[] = "Serial";
+        static uint8_t udi_comm_name[] = "CDC-COMM";
+        static uint8_t udi_data_name[] = "CDC-DATA";
+        static uint8_t udi_vendor_name[] = "Phywhisperer-USB";
+        static uint8_t udi_hid_generic[] = "CMSIS-DAP";
+
+        struct extra_strings_desc_t{
+                usb_str_desc_t header;
+                le16_t string[20];
+        };
+        static UDC_DESC_STORAGE struct extra_strings_desc_t extra_strings_desc = {
+                .header.bDescriptorType = USB_DT_STRING
+        };
+
+        uint8_t i;
+        uint8_t *str;
+        uint8_t str_lgt=0;
+
+        // Link payload pointer to the string corresponding at request
+        switch (udd_g_ctrlreq.req.wValue & 0xff) {
+        case UDI_CDC_IAD_STRING_ID:
+                DBG("Request UDI_CDC_IAD_STRING_ID" EOL);
+                str_lgt = sizeof(udi_cdc_name)-1;
+                str = udi_cdc_name;
+                break;
+
+        case UDI_CDC_COMM_STRING_ID_0:
+                DBG("Request UDI_CDC_COMM_STRING_ID_0" EOL);
+                str_lgt = sizeof(udi_comm_name)-1;
+                str = udi_comm_name;
+                break;
+
+        case UDI_CDC_DATA_STRING_ID_0:
+                DBG("Request UDI_CDC_DATA_STRING_ID_0" EOL);
+                str_lgt = sizeof(udi_data_name)-1;
+                str = udi_data_name;
+                break;
+
+        case UDI_VENDOR_STRING_ID:
+                DBG("Request UDI_VENDOR_STRING_ID" EOL);
+                str_lgt = sizeof(udi_vendor_name)-1;
+                str = udi_vendor_name;
+                break; 
+
+        case UDI_HID_GENERIC_STRING_ID:
+                DBG("Request for UDI_HID_GENERIC_STRING_ID" EOL);
+                str_lgt = sizeof(udi_hid_generic)-1;
+                str = udi_hid_generic;
+                break;
+
+        default:
+                DBG("Request for unknown element %d" EOL, udd_g_ctrlreq.req.wValue & 0xff);
+                return false;
+        }
+
+        if (str_lgt!=0) {
+                for( i=0; i<str_lgt; i++) {
+                        extra_strings_desc.string[i] = cpu_to_le16((le16_t)str[i]);
+                }
+                extra_strings_desc.header.bLength = 2+ (str_lgt)*2;
+                udd_g_ctrlreq.payload_size = extra_strings_desc.header.bLength;
+                udd_g_ctrlreq.payload = (uint8_t *) &extra_strings_desc;
+        }
+
+        // if the string is larger than request length, then cut it
+        if (udd_g_ctrlreq.payload_size > udd_g_ctrlreq.req.wLength) {
+                udd_g_ctrlreq.payload_size = udd_g_ctrlreq.req.wLength;
+        }
+        return true;
+}
+
+void hacky_delay(void);
+
 void hacky_delay(void)
 {
     for (volatile uint32_t i = 0; i < 250000; i++);
@@ -142,6 +272,8 @@ int main(void)
 {
     uint32_t serial_number[4];
 
+    DBG("Firmware starting =========================================" EOL);
+
     // Read Device-ID from SAM3U. Do this before enabling interrupts etc.
     flash_read_unique_id(serial_number, sizeof(serial_number));
 
@@ -150,12 +282,9 @@ int main(void)
 
     // Initialize the sleep manager
     sleepmgr_init();
-#if !SAMD21 && !SAMR21
+
     sysclk_init();
     phywhisperer_setup_pins();
-#else
-    system_init();
-#endif
 
 	//Convert serial number to ASCII for USB Serial number
 	for(unsigned int i = 0; i < 4; i++){
@@ -164,6 +293,10 @@ int main(void)
 	usb_serial_number[32] = 0;
 
     genclk_enable_config(GENCLK_PCK_1, GENCLK_PCK_SRC_MCK, GENCLK_PCK_PRES_1);
+
+    udc_stop();
+    hacky_delay();hacky_delay();hacky_delay();hacky_delay();
+
     udc_start();
     gpio_set_pin_high(LED0_GPIO);
     gpio_set_pin_low(LED1_GPIO);
@@ -171,9 +304,8 @@ int main(void)
     phywhisperer_no_pwr();
     USB_PWR_STATE = 0;
 
-    uint8_t curr_pwr_setting = 0;
     while(1) {
-        sleepmgr_enter_sleep();
+       // sleepmgr_enter_sleep();
         uint8_t button_status = !(PIOA->PIO_PDSR & (1 << BUTTON_IN));
         if (button_status){
             hacky_delay(); //delay to try to debounce

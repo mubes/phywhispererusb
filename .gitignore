@@ -8,7 +8,11 @@
 *.pyc
 *.vcd
 *.gtkw
+*~
+.browse*
+.dep
 a.out
+firmware/phywhisperer/phywhisperer-SAM3U1C*
 /firmware/phywhisperer/objdir/
 /firmware/phywhisperer/objdir/
 /docs/_build/

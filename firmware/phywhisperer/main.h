@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief Common User Interface for USB vendor class application
+ * \brief Declaration of main function used by example
  *
  * Copyright (c) 2011 Atmel Corporation. All rights reserved.
  *
@@ -41,42 +41,60 @@
  *
  */
 
-#ifndef _UI_H_
-#define _UI_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
-//! \brief Initializes the user interface
-void ui_init(void);
-
-//! \brief Enters the user interface in power down mode
-void ui_powerdown(void);
-
-//! \brief Exits the user interface of power down mode
-void ui_wakeup(void);
-
-/*! \brief Notify the state of loopback
- * It is called when a the loopback is started and stopped.
+/*! \brief Notify via user interface that enumeration is ok
+ * This is called by vendor interface when USB Host enable it.
  *
- * \param b_started    loopback started if true, else stopped
+ * \retval true if vendor startup is successfully done
  */
-void ui_loop_back_state(bool b_started);
+bool main_vendor_enable(void);
 
-/*! \brief This process is called each 1ms
- * It is called only if the USB interface is enabled.
+/*! \brief Notify via user interface that enumeration is disabled
+ * This is called by vendor interface when USB Host disable it.
+ */
+void main_vendor_disable(void);
+
+/*! \brief Manages the leds behaviors
+ * Called when a start of frame is received on USB line each 1ms.
+ */
+void main_sof_action(void);
+
+/*! \brief Enters the application in low power mode
+ * Callback called when USB host sets USB line in suspend state
+ */
+void main_suspend_action(void);
+
+/*! \brief Turn on a led to notify active mode
+ * Called when the USB line is resumed from the suspend state
+ */
+void main_resume_action(void);
+
+/*! \brief Manage the reception of setup request OUT
  *
- * \param framenumber  Current frame number
+ * \retval true if request accepted
  */
-void ui_process(uint16_t framenumber);
+bool main_setup_out_received(void);
 
+/*! \brief Manage the reception of setup request IN
+ *
+ * \retval true if request accepted
+ */
+bool main_setup_in_received(void);
 
-void ui_com_rx_start(void);
-void ui_com_rx_stop(void);
-void ui_com_tx_start(void);
-void ui_com_tx_stop(void);
-void ui_com_error(void);
-void ui_com_overflow(void);
+bool main_cdc_enable(uint8_t port);
+void main_cdc_disable(uint8_t port);
+void main_cdc_set_dtr(uint8_t port, bool b_enable);
+bool main_generic_enable(void);
+void main_generic_disable(void);
+void main_hid_set_feature(uint8_t* report);
 
-void uart_rx_notify(uint8_t port);
-void uart_config(uint8_t port, usb_cdc_line_coding_t * cfg);
-void uart_open(uint8_t port);
-void uart_close(uint8_t port);
-#endif // _UI_H_
+bool main_hid_report_out( void *ptr);
+void main_hid_set_feature(uint8_t* r);
+void main_generic_disable(void);
+bool main_generic_enable(void);
+void phywhisperer_setup_pins(void);
+bool main_extra_string(void);
+
+#endif // _MAIN_H_

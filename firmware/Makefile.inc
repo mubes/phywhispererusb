@@ -28,6 +28,15 @@
 # To rebuild project do "make clean" then "make all".
 #----------------------------------------------------------------------------
 
+# Make things quiet unless we've been told not to
+ifdef VERBOSE
+cmd = $1
+Q :=
+else
+cmd = @$(if $(value 2),echo "$2";)$1
+Q := @
+endif
+
 ifeq ($(PLATFORM),)
   -include Makefile.platform
   ifeq ($(PLATFORM),)
@@ -273,7 +282,11 @@ WINSHELL = cmd
 #Depending on if echo is unix or windows, they respond differently to no arguments. Windows will annoyingly
 #print "echo OFF", so instead we're forced to give it something to echo. The windows one will also print
 #passed ' or " symbols, so we use a . as it's pretty small...
-ECHO_BLANK = echo .
+ifeq ($(OS),Windows_NT)
+ECHO_BLANK ?= echo:
+else
+ECHO_BLANK ?= echo
+endif
 
 
 # Define Messages
@@ -422,13 +435,13 @@ COFFCONVERT += --change-section-address .eeprom-0x810000
 coff: $(TARGET-PLAT).elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_COFF) $(TARGET-PLAT).cof
-	$(COFFCONVERT) -O coff-avr $< $(TARGET-PLAT).cof
+	$(Q)$(COFFCONVERT) -O coff-avr $< $(TARGET-PLAT).cof
 
 
 extcoff: $(TARGET-PLAT).elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_EXTENDED_COFF) $(TARGET-PLAT).cof
-	$(COFFCONVERT) -O coff-ext-avr $< $(TARGET-PLAT).cof
+	$(Q)$(COFFCONVERT) -O coff-ext-avr $< $(TARGET-PLAT).cof
 
 
 
@@ -436,30 +449,30 @@ extcoff: $(TARGET-PLAT).elf
 %.hex: %.elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_FLASH) $@
-	$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
+	$(Q)$(OBJCOPY) -O ihex -R .eeprom -R .fuse -R .lock -R .signature $< $@
 
 %.bin: %.hex
 	@$(ECHO_BLANK)
 	@echo $(MSG_BIN) $@
-	$(OBJCOPY) --input-target=ihex --output-target=binary $< $@
+	$(Q)$(OBJCOPY) --input-target=ihex --output-target=binary $< $@
 
 %.eep: %.elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_EEPROM) $@
-	-$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
+	$(Q)$(OBJCOPY) -j .eeprom --set-section-flags=.eeprom="alloc,load" \
 	--change-section-lma .eeprom=0 --no-change-warnings -O ihex $< $@ || exit 0
 
 # Create extended listing file from ELF output file.
 %.lss: %.elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_EXTENDED_LISTING) $@
-	$(OBJDUMP) -h -S -z $< > $@
+	$(Q)$(OBJDUMP) -h -S -z $< > $@
 
 # Create a symbol table from ELF output file.
 %.sym: %.elf
 	@$(ECHO_BLANK)
 	@echo $(MSG_SYMBOL_TABLE) $@
-	$(NM) -n $< > $@
+	$(Q)$(NM) -n $< > $@
 
 
 
@@ -469,7 +482,7 @@ extcoff: $(TARGET-PLAT).elf
 %.a: $(OBJ)
 	@$(ECHO_BLANK)
 	@echo $(MSG_CREATING_LIBRARY) $@
-	$(AR) $@ $(OBJ)
+	$(Q)$(AR) $@ $(OBJ)
 
 
 # Link: create ELF output file from object files.
@@ -478,22 +491,22 @@ extcoff: $(TARGET-PLAT).elf
 %.elf: $(OBJ)
 	@$(ECHO_BLANK)
 	@echo $(MSG_LINKING) $@
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	$(Q)$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
 
 
 # Compile: create object files from C source files.
 $(OBJDIR)/%.o : %.c clean_objs $(OBJDIR) .dep begin gccversion
 	@$(ECHO_BLANK)
 	@echo $(MSG_COMPILING) $<
-	$(CC) -c $(ALL_CFLAGS) $< -o $@
-	$(CC) -S $(ALL_CFLAGS) $< -o $@.s
+	$(Q)$(CC) -c $(ALL_CFLAGS) $< -o $@
+	$(Q)$(CC) -S $(ALL_CFLAGS) $< -o $@.s
 
 
 # Compile: create object files from C++ source files.
 $(OBJDIR)/%.o : %.cpp clean_objs $(OBJDIR) .dep begin gccversion
 	@$(ECHO_BLANK)
 	@echo $(MSG_COMPILING_CPP) $<
-	$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
+	$(Q)$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
 
 
 # Compile: create assembler files from C source files.
@@ -510,27 +523,27 @@ $(OBJDIR)/%.o : %.cpp clean_objs $(OBJDIR) .dep begin gccversion
 $(OBJDIR)/%.o : %.S clean_objs $(OBJDIR) .dep begin gccversion
 	@$(ECHO_BLANK)
 	@echo $(MSG_ASSEMBLING) $<
-	$(CC) -c $(ALL_ASFLAGS) $< -o $@
+	$(Q)$(CC) -c $(ALL_ASFLAGS) $< -o $@
 
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c
-	$(CC) -E $(MCU_FLAGS) -I. $(CFLAGS) $< -o $@ 
+	$(Q)$(CC) -E $(MCU_FLAGS) -I. $(CFLAGS) $< -o $@ 
 
 # Clean all object files specific to this platform
 clean_objs :
-	$(REMOVE) $(TARGET-PLAT).hex
-	$(REMOVE) $(TARGET-PLAT).eep
-	$(REMOVE) $(TARGET-PLAT).cof
-	$(REMOVE) $(TARGET-PLAT).elf
-	$(REMOVE) $(TARGET-PLAT).map
-	$(REMOVE) $(TARGET-PLAT).sym
-	$(REMOVE) $(TARGET-PLAT).lss
-	-$(REMOVE) $(OBJDIR)/*.o
-	-$(REMOVE) $(OBJDIR)/*.lst
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRC:.c=.d)
-	$(REMOVE) $(SRC:.c=.i)
+	$(Q)$(REMOVE) $(TARGET-PLAT).hex
+	$(Q)$(REMOVE) $(TARGET-PLAT).eep
+	$(Q)$(REMOVE) $(TARGET-PLAT).cof
+	$(Q)$(REMOVE) $(TARGET-PLAT).elf
+	$(Q)$(REMOVE) $(TARGET-PLAT).map
+	$(Q)$(REMOVE) $(TARGET-PLAT).sym
+	$(Q)$(REMOVE) $(TARGET-PLAT).lss
+	-$(Q)$(REMOVE) $(OBJDIR)/*.o
+	-$(Q)$(REMOVE) $(OBJDIR)/*.lst
+	$(Q)$(REMOVE) $(SRC:.c=.s)
+	$(Q)$(REMOVE) $(SRC:.c=.d)
+	$(Q)$(REMOVE) $(SRC:.c=.i)
 
 # Target: clean project.
 clean: begin clean_print clean_all_objs clean_list end
@@ -541,21 +554,21 @@ clean_print :
 
 # Clean all object files related to any of the platforms	
 clean_all_objs :
-	$(REMOVE) $(addsuffix .hex,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .eep,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .cof,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .elf,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .map,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .sym,$(TARGET-ALL))
-	$(REMOVE) $(addsuffix .lss,$(TARGET-ALL))
-	-$(REMOVE) $(OBJDIR)/*.o
-	-$(REMOVE) $(OBJDIR)/*.lst
-	$(REMOVE) $(SRC:.c=.s)
-	$(REMOVE) $(SRC:.c=.d)
-	$(REMOVE) $(SRC:.c=.i)
+	$(Q)$(REMOVE) $(addsuffix .hex,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .eep,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .cof,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .elf,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .map,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .sym,$(TARGET-ALL))
+	$(Q)$(REMOVE) $(addsuffix .lss,$(TARGET-ALL))
+	-$(Q)$(REMOVE) $(OBJDIR)/*.o
+	-$(Q)$(REMOVE) $(OBJDIR)/*.lst
+	$(Q)$(REMOVE) $(SRC:.c=.s)
+	$(Q)$(REMOVE) $(SRC:.c=.d)
+	$(Q)$(REMOVE) $(SRC:.c=.i)
 
 clean_list :
-	$(REMOVEDIR) .dep
+	$(Q)$(REMOVEDIR) .dep
 
 # Create object files directory
 #$(shell mkdir $(OBJDIR) 2>/dev/null)

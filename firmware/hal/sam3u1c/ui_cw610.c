@@ -1,9 +1,9 @@
 /**
  * \file
  *
- * \brief Common User Interface for USB vendor class application
+ * \brief User Interface
  *
- * Copyright (c) 2011 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2012 Atmel Corporation. All rights reserved.
  *
  * \asf_license_start
  *
@@ -41,42 +41,79 @@
  *
  */
 
-#ifndef _UI_H_
-#define _UI_H_
+#include <asf.h>
+#include "ui.h"
+#include "tasks.h"
 
-//! \brief Initializes the user interface
-void ui_init(void);
+void ui_init(void)
+{
+	// Initialize LEDs
+	LED_Off(LED0_GPIO);
+	LED_Off(LED1_GPIO);
+	//LED_Off(LED2_GPIO);
+}
 
-//! \brief Enters the user interface in power down mode
-void ui_powerdown(void);
+void ui_com_rx_start(void)
+{
+}
 
-//! \brief Exits the user interface of power down mode
-void ui_wakeup(void);
+void ui_com_rx_stop(void)
+{
+}
 
-/*! \brief Notify the state of loopback
- * It is called when a the loopback is started and stopped.
+void ui_com_tx_start(void)
+{
+}
+
+void ui_com_tx_stop(void)
+{
+}
+
+void ui_com_error(void)
+{
+}
+
+void ui_com_overflow(void)
+{
+}
+
+
+void ui_powerdown(void)
+{
+	LED_Off(LED0_GPIO);
+	LED_Off(LED1_GPIO);
+	//LED_Off(LED2_GPIO);
+	
+	// Power off FPGA
+	//board_sram_pwroff();
+		
+}
+
+void ui_wakeup(void)
+{
+	LED_On(LED0_GPIO);
+	//board_sram_pwron();
+}
+
+void ui_process(uint16_t framenumber)
+{
+	if ((framenumber % 1000) == 0) {
+		LED_On(LED0_GPIO);
+	}
+	if ((framenumber % 1000) == 500) {
+		LED_Off(LED0_GPIO);
+	}
+	
+	if ((framenumber % 512) == 0) {
+		LED_Off(LED1_GPIO);
+		//LED_Off(LED2_GPIO);
+	}
+}
+
+/**
+ * \defgroup UI User Interface
  *
- * \param b_started    loopback started if true, else stopped
+ * Human interface on SAM3U-EK:
+ * - Led 0 (D2) blinks when USB host has checked and enabled vendor interface
+ * - Led 1 (D3) is on when loopback is running
  */
-void ui_loop_back_state(bool b_started);
-
-/*! \brief This process is called each 1ms
- * It is called only if the USB interface is enabled.
- *
- * \param framenumber  Current frame number
- */
-void ui_process(uint16_t framenumber);
-
-
-void ui_com_rx_start(void);
-void ui_com_rx_stop(void);
-void ui_com_tx_start(void);
-void ui_com_tx_stop(void);
-void ui_com_error(void);
-void ui_com_overflow(void);
-
-void uart_rx_notify(uint8_t port);
-void uart_config(uint8_t port, usb_cdc_line_coding_t * cfg);
-void uart_open(uint8_t port);
-void uart_close(uint8_t port);
-#endif // _UI_H_

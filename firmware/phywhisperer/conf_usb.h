@@ -9,33 +9,23 @@
  *
  * \page License
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * Subject to your compliance with these terms, you may use Microchip
+ * software and any derivatives exclusively with Microchip products.
+ * It is your responsibility to comply with third party license terms applicable
+ * to your use of third party software (including open source software) that
+ * may accompany Microchip software.
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * 3. The name of Atmel may not be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * 4. This software may only be redistributed and used in connection with an
- *    Atmel microcontroller product.
- *
- * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
- * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS SOFTWARE,
+ * INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY,
+ * AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT WILL MICROCHIP BE
+ * LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, INCIDENTAL OR CONSEQUENTIAL
+ * LOSS, DAMAGE, COST OR EXPENSE OF ANY KIND WHATSOEVER RELATED TO THE
+ * SOFTWARE, HOWEVER CAUSED, EVEN IF MICROCHIP HAS BEEN ADVISED OF THE
+ * POSSIBILITY OR THE DAMAGES ARE FORESEEABLE.  TO THE FULLEST EXTENT
+ * ALLOWED BY LAW, MICROCHIP'S TOTAL LIABILITY ON ALL CLAIMS IN ANY WAY
+ * RELATED TO THIS SOFTWARE WILL NOT EXCEED THE AMOUNT OF FEES, IF ANY,
+ * THAT YOU HAVE PAID DIRECTLY TO MICROCHIP FOR THIS SOFTWARE.
  *
  * \asf_license_stop
  *
@@ -58,53 +48,57 @@
 #define  USB_DEVICE_MAJOR_VERSION         1
 #define  USB_DEVICE_MINOR_VERSION         0
 #define  USB_DEVICE_POWER                 500 // Consumption on Vbus line (mA)
-#define  USB_DEVICE_ATTR                \
- (USB_CONFIG_ATTR_BUS_POWERED)
-// (USB_CONFIG_ATTR_SELF_POWERED)
-// (USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_SELF_POWERED)
-// (USB_CONFIG_ATTR_REMOTE_WAKEUP|USB_CONFIG_ATTR_BUS_POWERED)
+#define  USB_DEVICE_ATTR                  USB_CONFIG_ATTR_BUS_POWERED
 
 //! USB Device string definitions
 
 extern char usb_serial_number[33];
 
 #define  USB_DEVICE_MANUFACTURE_NAME      "NewAE Technology Inc."
-#define  USB_DEVICE_PRODUCT_NAME          "PhyWhisperer-USB"
+#define  USB_DEVICE_PRODUCT_NAME          "PhyWhisperer-UDT"
 #define  USB_DEVICE_GET_SERIAL_NAME_POINTER usb_serial_number
 #define  USB_DEVICE_GET_SERIAL_NAME_LENGTH 32
-//We get serial number from unique ID buitl into chip
-//#define  USB_DEVICE_SERIAL_NAME "1234"
 
 /**
  * Device speeds support
  * Low speed not supported by this vendor class
  * @{
  */
-//! To authorize the High speed
-#if (UC3A3||UC3A4)
 #  define  USB_DEVICE_HS_SUPPORT
-#elif (SAM3XA||SAM3U)
-#  define  USB_DEVICE_HS_SUPPORT
-#endif
 //@}
 
-
 /**
- * USB Device Callbacks definitions (Optional)
+ * USB Device Callbacks definitions
  * @{
  */
 #define  UDC_VBUS_EVENT(b_vbus_high)
 #define  UDC_SOF_EVENT()                  main_sof_action()
 #define  UDC_SUSPEND_EVENT()              main_suspend_action()
 #define  UDC_RESUME_EVENT()               main_resume_action()
-//! Mandatory when USB_DEVICE_ATTR authorizes remote wakeup feature
-// #define  UDC_REMOTEWAKEUP_ENABLE()        user_callback_remotewakeup_enable()
-// extern void user_callback_remotewakeup_enable(void);
-// #define  UDC_REMOTEWAKEUP_DISABLE()       user_callback_remotewakeup_disable()
-// extern void user_callback_remotewakeup_disable(void);
-//! When a extra string descriptor must be supported
-//! other than manufacturer, product and serial string
-// #define  UDC_GET_EXTRA_STRING()
+#define  UDC_GET_EXTRA_STRING()           main_extra_string()
+//@}
+
+/**
+ * USB Device low level configuration
+ * For composite device, these configuration must be defined here
+ * @{
+ */
+//! Control endpoint size
+#define  USB_DEVICE_EP_CTRL_SIZE       64
+
+//! Four interfaces for this device (CDC COM + CDC DATA + Vendor + HID)
+#define  USB_DEVICE_NB_INTERFACE       4
+
+//! 6 endpoints used by CDC, Vendor and HID interfaces (HID OUT in EP0)
+#  define  USB_DEVICE_MAX_EP           6
+
+// In HS mode, size of bulk endpoints are 512
+// If CDC and Vendor endpoints all uses 2 banks, DPRAM is not enough: 4 bulk
+// endpoints requires 4K bytes. So reduce the number of banks of CDC bulk
+// endpoints to use less DPRAM. Keep Vendor setting to keep performance.
+#     define  UDD_BULK_NB_BANK(ep) 1
+
+//((ep == 5 || ep== 6) ? 1 : 2)
 //@}
 
 //@}
@@ -114,6 +108,54 @@ extern char usb_serial_number[33];
  * USB Interface Configuration
  * @{
  */
+
+/**
+ * Configuration of CDC interface
+ * @{
+ */
+
+//! Define two USB communication ports
+#define  UDI_CDC_PORT_NB 1
+
+//! Interface callback definition
+#define  UDI_CDC_ENABLE_EXT(port)         main_cdc_enable(port)
+#define  UDI_CDC_DISABLE_EXT(port)        main_cdc_disable(port)
+#define  UDI_CDC_RX_NOTIFY(port)          uart_rx_notify(port)
+#define  UDI_CDC_TX_EMPTY_NOTIFY(port)
+#define  UDI_CDC_SET_CODING_EXT(port,cfg) uart_config(port,cfg)
+#define  UDI_CDC_SET_DTR_EXT(port,set)    main_cdc_set_dtr(port,set)
+#define  UDI_CDC_SET_RTS_EXT(port,set)
+
+//! Define it when the transfer CDC Device to Host is a low rate (<512000 bauds)
+//! to reduce CDC buffers size
+//#define  UDI_CDC_LOW_RATE
+
+//! Default configuration of communication port
+#define  UDI_CDC_DEFAULT_RATE             115200
+#define  UDI_CDC_DEFAULT_STOPBITS         CDC_STOP_BITS_1
+#define  UDI_CDC_DEFAULT_PARITY           CDC_PAR_NONE
+#define  UDI_CDC_DEFAULT_DATABITS         8
+
+//! Enable id string of interface to add an extra USB string
+#define UDI_CDC_IAD_STRING_ID             4
+#define UDI_CDC_COMM_STRING_ID_0          5
+#define UDI_CDC_DATA_STRING_ID_0          6
+/**
+ * USB CDC low level configuration
+ * In standalone these configurations are defined by the CDC module.
+ * For composite device, these configuration must be defined here
+ * @{
+ */
+//! Endpoint numbers definition
+#  define  UDI_CDC_COMM_EP_0             (3 | USB_EP_DIR_IN) // Notify endpoint
+#  define  UDI_CDC_DATA_EP_IN_0          (6 | USB_EP_DIR_IN) // TX
+#  define  UDI_CDC_DATA_EP_OUT_0         (5 | USB_EP_DIR_OUT)// RX
+
+//! Interface numbers
+#define  UDI_CDC_COMM_IFACE_NUMBER_0   1
+#define  UDI_CDC_DATA_IFACE_NUMBER_0   2
+//@}
+//@}
 
 /**
  * Configuration of vendor interface
@@ -127,21 +169,96 @@ extern char usb_serial_number[33];
 
 //! endpoints size for full speed
 //! Note: Disable the endpoints of a type, if size equal 0
-#define UDI_VENDOR_EPS_SIZE_INT_FS    0 /*64*/
+#define UDI_VENDOR_EPS_SIZE_INT_FS    0
 #define UDI_VENDOR_EPS_SIZE_BULK_FS   64
-#if SAMG55
-#define UDI_VENDOR_EPS_SIZE_ISO_FS   0
-#else
-#define UDI_VENDOR_EPS_SIZE_ISO_FS   0 /*256*/
-#endif
+#define UDI_VENDOR_EPS_SIZE_ISO_FS    0 
 
 //! endpoints size for high speed
-#define UDI_VENDOR_EPS_SIZE_INT_HS    0 /*64*/
-#define UDI_VENDOR_EPS_SIZE_BULK_HS  512
-#define UDI_VENDOR_EPS_SIZE_ISO_HS    0 /*64*/
+#define UDI_VENDOR_EPS_SIZE_INT_HS    0
+#define UDI_VENDOR_EPS_SIZE_BULK_HS   512
+#define UDI_VENDOR_EPS_SIZE_ISO_HS    0
+
+// String to describe interface
+#define UDI_VENDOR_STRING_ID          7
+
+//! Endpoint numbers definition
+#define  UDI_VENDOR_EP_BULK_IN       (1 | USB_EP_DIR_IN)
+#define  UDI_VENDOR_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
+
+//! Interface number
+#define  UDI_VENDOR_IFACE_NUMBER     0
 
 //@}
 
+/**
+ * Configuration of HID Generic interface
+ * @{
+ */
+//! Interface callback definition
+#define  UDI_HID_GENERIC_ENABLE_EXT()        main_generic_enable()
+#define  UDI_HID_GENERIC_DISABLE_EXT()       main_generic_disable()
+#define  UDI_HID_GENERIC_REPORT_OUT(ptr)     main_hid_report_out(ptr)
+//ui_led_change(ptr)
+#define  UDI_HID_GENERIC_SET_FEATURE(report) main_hid_set_feature(report)
+
+//! Sizes of I/O reports
+#define  UDI_HID_REPORT_IN_SIZE             8
+#define  UDI_HID_REPORT_OUT_SIZE            8
+#define  UDI_HID_REPORT_FEATURE_SIZE        4
+
+//! Sizes of I/O endpoints
+#define  UDI_HID_GENERIC_EP_SIZE            8
+
+#define UDI_HID_GENERIC_STRING_ID           8
+
+#define UDI_HID_GENERIC_EP_IN               ( 4 | USB_EP_DIR_IN )
+#define UDI_HID_GENERIC_EP_OUT              0
+
+#define UDI_HID_GENERIC_IFACE_NUMBER        3
+//@}
+
+//@}
+
+
+
+/**
+ * Description of Composite Device
+ * @{
+ */
+//! USB Interfaces descriptor structure
+#define UDI_COMPOSITE_DESC_T \
+        udi_vendor_desc_t      udi_vendor;      \
+        usb_iad_desc_t         udi_cdc_iad;     \
+        udi_cdc_comm_desc_t    udi_cdc_comm;    \
+        udi_cdc_data_desc_t    udi_cdc_data;    \
+        udi_hid_generic_desc_t udi_hid_generic;        
+
+//! USB Interfaces descriptor value for Full Speed
+#define UDI_COMPOSITE_DESC_FS \
+        .udi_vendor           = UDI_VENDOR_DESC_FS,     \
+        .udi_cdc_iad          = UDI_CDC_IAD_DESC_0,     \
+        .udi_cdc_comm         = UDI_CDC_COMM_DESC_0,    \
+        .udi_cdc_data         = UDI_CDC_DATA_DESC_0_FS, \
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC        
+
+        
+
+//! USB Interfaces descriptor value for High Speed
+#define UDI_COMPOSITE_DESC_HS \
+        .udi_vendor           = UDI_VENDOR_DESC_HS,     \
+        .udi_cdc_iad          = UDI_CDC_IAD_DESC_0,     \
+        .udi_cdc_comm         = UDI_CDC_COMM_DESC_0,    \
+        .udi_cdc_data         = UDI_CDC_DATA_DESC_0_HS, \
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC
+        
+
+//! USB Interface APIs
+#define UDI_COMPOSITE_API \
+        &udi_api_vendor,  \
+        &udi_api_cdc_comm, \
+        &udi_api_cdc_data, \
+        &udi_api_hid_generic
+        
 //@}
 
 
@@ -149,14 +266,14 @@ extern char usb_serial_number[33];
  * USB Device Driver Configuration
  * @{
  */
-//! Limit the isochronous endpoint in singe bank mode for USBB driver
-//! to avoid exceeding USB DPRAM.
-#define UDD_ISOCHRONOUS_NB_BANK(ep) 1
 //@}
 
 //! The includes of classes and other headers must be done
 //! at the end of this file to avoid compile error
-#include "udi_vendor_conf.h"
+#include "udi_cdc.h"
+#include "udi_vendor.h"
+#include "udi_hid_generic.h"
+#include "uart.h"
 #include "ui.h"
 #include "main.h"
 

@@ -35,6 +35,7 @@ TARGET = phywhisperer
 # List C source files here.
 # Header files (.h) are automatically pulled in.
 SRC += main.c usb.c usb_xmem.c fpga_program.c
+SRC += report.c
 
 # -----------------------------------------------------------------------------
 OPT=0

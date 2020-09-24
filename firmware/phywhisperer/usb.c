@@ -61,6 +61,9 @@ void main_vendor_bulk_in_received(udd_ep_status_t status,
 void main_vendor_bulk_out_received(udd_ep_status_t status,
                                    iram_size_t nb_transfered, udd_ep_id_t ep);
 
+void ctrl_change_pwr(void);
+void ctrl_fpga_reset(void);
+
 //this stuff just turns leds on and off
 void main_suspend_action(void)
 {
@@ -185,9 +188,6 @@ void ctrl_writemem_ctrl(void){
     FPGA_releaselock();
 }
 
-static uint32_t bulkread_address = 0;
-static uint32_t bulkread_len = 0;
-
 void ctrl_writemem_bulk(void){
 //uint32_t buflen = *(CTRLBUFFER_WORDPTR);
     uint32_t address = *(CTRLBUFFER_WORDPTR + 1);
@@ -302,7 +302,7 @@ bool main_setup_out_received(void)
     udd_g_ctrlreq.payload_size = min(udd_g_ctrlreq.req.wLength,	sizeof(ctrlbuffer));
 
     blockendpoint_usage = bep_emem;
-    static uint8_t  respbuf[128];
+
     switch(udd_g_ctrlreq.req.bRequest){
         /* Memory Read */
     case REQ_MEMREAD_BULK:
@@ -376,7 +376,6 @@ bool main_setup_in_received(void)
     */
 
     static uint8_t  respbuf[64];
-    unsigned int cnt;
 
     switch(udd_g_ctrlreq.req.bRequest){
     case REQ_MEMREAD_CTRL:
