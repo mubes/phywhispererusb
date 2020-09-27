@@ -12,9 +12,8 @@
 .browse*
 .dep
 a.out
-firmware/phywhisperer/phywhisperer-SAM3U1C*
-/firmware/phywhisperer/objdir/
-/firmware/phywhisperer/objdir/
+firmware/phywhisperer-sam3u2c*
+/firmware/objdir/
 /docs/_build/
 /drivers/phywhisperer_windows_drivers/
 /software/phywhisperer.egg-info/

@@ -1,0 +1,158 @@
+{
+	"folders": [
+		{
+                        "path": "../",
+		}
+	],
+       "tasks": {
+                "version": "2.0.0",
+                "tasks": [
+                        {
+                                "label": "build",            
+                                "options": {
+                                        "cwd": "${workspaceRoot}"
+                                },
+                                "type": "shell",
+                                "command": "make -j32",
+                                "problemMatcher": [
+                                        "$gcc"
+                                ],
+                                "presentation": {
+                                        "echo": true,
+                                        "reveal": "always",
+                                        "focus": false,
+                                        "panel": "shared",
+                                        "showReuseMessage": true,
+                                        "clear": true
+                                }
+                        },
+                        {
+                                "label": "clean",            
+                                "options": {
+                                        "cwd": "${workspaceRoot}"
+                                },
+                                "type": "shell",
+                                "command": "ECHO_BLANK= make",
+                                "args": ["clean"],
+                                "problemMatcher": [
+                                        "$gcc"
+                                ]
+                        }
+                ]       
+        },
+        "launch": {
+                "configurations": [
+
+                
+
+                        {
+                                "name": "BMP Download/SWO",
+                                "cwd": "${workspaceRoot}",
+                                "executable": "phywhisperer-sam3u2c.elf",
+                                "servertype": "bmp",
+                                "type": "cortex-debug",
+                                "request": "launch",
+                                "device": "SAM3U2C",
+                                "BMPGDBSerialPort": "/dev/ttyACM0",
+                                "interface": "swd",
+                                "runToMain": false,
+                                "svdFile": "${workspaceRoot}/support/ATSAM3U2C.svd",
+                                "preRestartCommands": [
+                                        "set mem inaccessible-by-default off",
+                                        "continue"
+                                ],
+                                "preLaunchCommands": [
+                                        "set *0xE000EDFC |= (1<<4)|(1<<5)|(1<<6)|(1<<7)|(1<<8)|(1<<9)|(1<<10)",
+                                        "set output-radix 16",
+                                        "set mem inaccessible-by-default off",
+                                        "source ~/Develop/t/orbuculum/Support/gdbtrace.init",
+                                        "monitor traceswo 2250000",
+                                        "prepareSWO 96000000 2250000",
+                                        "dwtSamplePC 1",
+                                        "dwtSyncTap 3",
+                                        "dwtPostTap 1",
+                                        "dwtPostInit 1",
+                                        "dwtPostReset 15",
+                                        "dwtCycEna 1",
+                                        "dwtTraceException 1",
+                                        "ITMId 1",
+                                        "ITMGTSFreq 0",
+                                        "ITMTSPrescale 3",
+                                        "ITMTSEna 1",
+                                        "ITMTXEna 1",
+                                        "ITMSYNCEna 1",
+                                        "ITMEna 1",
+                                        "ITMTER 0 0xFFFFFFFF",
+                                        "ITMTPR 0xFFFFFFFF"
+                                ]
+                        }
+                        ,
+                        {
+                                "name": "JLink Download/SWO",
+                                "cwd": "${workspaceRoot}",
+                                "executable": "phywhisperer-sam3u2c.elf",
+                                "servertype": "jlink",
+                                "type": "cortex-debug",
+                                "request": "launch",
+                                "device": "SAM3U2C",
+                                "interface": "swd",
+                                "runToMain": false,
+                                "svdFile": "${workspaceRoot}/support/ATSAM3U2C.svd",
+                                "preRestartCommands": [
+                                        "set mem inaccessible-by-default off",
+                                        "continue"
+                                ],
+                                "preLaunchCommands": [
+                                        "set *0xE000EDFC |= (1<<4)|(1<<5)|(1<<6)|(1<<7)|(1<<8)|(1<<9)|(1<<10)",
+                                        "monitor speed 8000",
+                                        "monitor reset",
+                                        "set output-radix 16",
+                                        "set mem inaccessible-by-default off",
+                                        "monitor flash breakpoints 1",
+                                        "source ~/Develop/orbuculum/Support/gdbtrace.init",
+                                        "monitor swo EnableTarget 96000000 48000000 0xFF 0",
+                                        "dwtSamplePC 1",
+                                        "dwtSyncTap 3",
+                                        "dwtPostTap 1",
+                                        "dwtPostInit 1",
+                                        "dwtPostReset 5",
+                                        "dwtCycEna 1",
+                                        "dwtTraceException 1",
+                                        "ITMId 1",
+                                        "ITMGTSFreq 1",
+                                        "ITMTSPrescale 1",
+                                        "ITMTSEna 1",
+                                        "ITMTXEna 1",
+                                        "ITMSYNCEna 1",
+                                        "ITMEna 1",
+                                        "ITMTER 0 0xFFFFFFFF",
+                                        "ITMTPR 0xFFFFFFFF"
+                                ]
+                        }
+                ]
+        },
+        
+	"settings": {
+                "files.exclude": {
+                        "**/*.elf": true,
+                        "**/*.hex": true,
+                        "**/*.eep": true,
+                        "**/*.lss": true,
+                        "**/*.bin": true,
+                        "**/*.map": true,
+                        "**/*.sym": true,
+                        "**/.browse*": true,
+                        "**/*.a": true,
+                        "**/.dep": true,
+                        "**/objdir": true
+
+
+
+                },
+                "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
+                "C_Cpp.default.browse.databaseFilename": "${workspaceRoot}/.browse.vc.db",
+                "C_Cpp.default.cStandard": "c11",
+                "C_Cpp.default.cppStandard": "c++17",
+                "C_Cpp.default.intelliSenseMode": "gcc-x64",
+        }
+}
