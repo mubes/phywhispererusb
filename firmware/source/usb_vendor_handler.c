@@ -14,7 +14,6 @@
 
 #include <asf.h>
 #include "conf_usb.h"
-#include "stdio_serial.h"
 #include "ui.h"
 #include "genclk.h"
 #include "usb_vendor_handler.h"

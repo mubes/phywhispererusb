@@ -125,7 +125,7 @@
 #include <uart.h>
 
 // From module: USART - Serial interface - SAM implementation for devices with both UART and USART
-#include <serial.h>
+//#include <serial.h>
 
 // From module: USART - Univ. Syn Async Rec/Trans
 #include <usart.h>
