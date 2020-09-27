@@ -22,7 +22,7 @@
 uint8_t volatile *xram = (uint8_t *) PSRAM_BASE_ADDRESS;
 
 static volatile fpga_lockstatus_t _fpga_locked = fpga_unlocked;
-
+/* ====================================================================================== */
 int FPGA_setlock(fpga_lockstatus_t lockstatus)
 {
   int ret = 0;
@@ -35,17 +35,17 @@ int FPGA_setlock(fpga_lockstatus_t lockstatus)
   cpu_irq_leave_critical();
   return ret;
 }
-
+/* ====================================================================================== */
 void FPGA_releaselock(void)
 {
   _fpga_locked = fpga_unlocked;
 }
-
+/* ====================================================================================== */
 fpga_lockstatus_t FPGA_lockstatus(void)
 {
   return _fpga_locked;
 }
-
+/* ====================================================================================== */
 int try_enter_cs(void)
 {
   // Try to get the lock
@@ -57,13 +57,13 @@ int try_enter_cs(void)
   cpu_irq_leave_critical();
   return 0;
 }
-
+/* ====================================================================================== */
 void exit_cs(void)
 {
   FPGA_releaselock();
   cpu_irq_leave_critical();
 }
-
+/* ====================================================================================== */
 void FPGA_setaddr(uint32_t addr)
 {
   pio_sync_output_write(FPGA_ADDR_PORT, addr);
@@ -71,6 +71,7 @@ void FPGA_setaddr(uint32_t addr)
   gpio_set_pin_high(PIN_EBI_USB_SPARE1);
 }
 
+/* ====================================================================================== */
 /*
 Read four bytes from a given register, return as 32-bit number.
 
@@ -87,7 +88,7 @@ uint32_t unsafe_readuint32(uint16_t fpgaaddr)
   data |= *(xram+3) << 24;
   return data;
 }
-
+/* ====================================================================================== */
 uint32_t safe_readuint32(uint16_t fpgaaddr)
 {
   //TODO - This timeout to make GUI responsive in case of USB errors, but data will be invalid
@@ -106,9 +107,7 @@ uint32_t safe_readuint32(uint16_t fpgaaddr)
   exit_cs();
   return data;
 }
-
-
-
+/* ====================================================================================== */
 // Read numBytes bytes from memory
 void unsafe_readbytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
 {
@@ -119,7 +118,7 @@ void unsafe_readbytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
     data[i] = *(xram+i);
   }
 }
-
+/* ====================================================================================== */
 // Safely read bytes from memory by disabling interrupts first
 // Blocks until able to read
 void safe_readbytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
@@ -139,7 +138,7 @@ void safe_readbytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
   }
   exit_cs();
 }
-
+/* ====================================================================================== */
 // Write 4 bytes to memory
 void unsafe_writebytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
 {
@@ -151,8 +150,11 @@ void unsafe_writebytes(uint16_t fpgaaddr, uint8_t* data, int numBytes)
   }
 }
 
+/* ====================================================================================== */
 //Set timing for normal mode
-void smc_normaltiming(void){
+void smc_normaltiming(void)
+
+{
   smc_set_setup_timing(SMC, 0,
   SMC_SETUP_NWE_SETUP(0) |
   SMC_SETUP_NCS_WR_SETUP(1) |
@@ -178,10 +180,10 @@ void smc_normaltiming(void){
   SMC_MODE_DBW_BIT_8
   );
 }
+/* ====================================================================================== */
+void smc_fasttiming(void)
 
-void smc_fasttiming(void){
-
-
+{
   smc_set_setup_timing(SMC, 0,
   SMC_SETUP_NWE_SETUP(0) |
   SMC_SETUP_NCS_WR_SETUP(1) |
@@ -207,3 +209,4 @@ void smc_fasttiming(void){
   SMC_MODE_DBW_BIT_8
   );
 }
+/* ====================================================================================== */

@@ -72,10 +72,10 @@ extern char usb_serial_number[33];
  * @{
  */
 #define  UDC_VBUS_EVENT(b_vbus_high)
-#define  UDC_SOF_EVENT()                  main_sof_action()
-#define  UDC_SUSPEND_EVENT()              main_suspend_action()
-#define  UDC_RESUME_EVENT()               main_resume_action()
-#define  UDC_GET_EXTRA_STRING()           main_extra_string()
+#define  UDC_SOF_EVENT()                  usb_main_sof_action()
+#define  UDC_SUSPEND_EVENT()              usb_main_suspend_action()
+#define  UDC_RESUME_EVENT()               usb_main_resume_action()
+#define  UDC_GET_EXTRA_STRING()           usb_main_extra_string()
 //@}
 
 /**
@@ -118,12 +118,12 @@ extern char usb_serial_number[33];
 #define  UDI_CDC_PORT_NB 1
 
 //! Interface callback definition
-#define  UDI_CDC_ENABLE_EXT(port)         main_cdc_enable(port)
-#define  UDI_CDC_DISABLE_EXT(port)        main_cdc_disable(port)
-#define  UDI_CDC_RX_NOTIFY(port)          uart_rx_notify(port)
+#define  UDI_CDC_ENABLE_EXT(port)         usb_cdc_enable(port)
+#define  UDI_CDC_DISABLE_EXT(port)        usb_cdc_disable(port)
+#define  UDI_CDC_RX_NOTIFY(port)          usb_cdc_uart_rx_notify(port)
 #define  UDI_CDC_TX_EMPTY_NOTIFY(port)
-#define  UDI_CDC_SET_CODING_EXT(port,cfg) uart_config(port,cfg)
-#define  UDI_CDC_SET_DTR_EXT(port,set)    main_cdc_set_dtr(port,set)
+#define  UDI_CDC_SET_CODING_EXT(port,cfg) usb_cdc_uart_config(port,cfg)
+#define  UDI_CDC_SET_DTR_EXT(port,set)    usb_cdc_set_dtr(port,set)
 #define  UDI_CDC_SET_RTS_EXT(port,set)
 
 //! Define it when the transfer CDC Device to Host is a low rate (<512000 bauds)
@@ -162,10 +162,10 @@ extern char usb_serial_number[33];
  * @{
  */
 //! Interface callback definition
-#define UDI_VENDOR_ENABLE_EXT()           main_vendor_enable()
-#define UDI_VENDOR_DISABLE_EXT()          main_vendor_disable()
-#define UDI_VENDOR_SETUP_OUT_RECEIVED()   main_setup_out_received()
-#define UDI_VENDOR_SETUP_IN_RECEIVED()    main_setup_in_received()
+#define UDI_VENDOR_ENABLE_EXT()           usb_vendor_enable()
+#define UDI_VENDOR_DISABLE_EXT()          usb_vendor_disable()
+#define UDI_VENDOR_SETUP_OUT_RECEIVED()   usb_vendor_setup_out_received()
+#define UDI_VENDOR_SETUP_IN_RECEIVED()    usb_vendor_setup_in_received()
 
 //! endpoints size for full speed
 //! Note: Disable the endpoints of a type, if size equal 0
@@ -195,11 +195,10 @@ extern char usb_serial_number[33];
  * @{
  */
 //! Interface callback definition
-#define  UDI_HID_GENERIC_ENABLE_EXT()        main_generic_enable()
-#define  UDI_HID_GENERIC_DISABLE_EXT()       main_generic_disable()
-#define  UDI_HID_GENERIC_REPORT_OUT(ptr)     main_hid_report_out(ptr)
-//ui_led_change(ptr)
-#define  UDI_HID_GENERIC_SET_FEATURE(report) main_hid_set_feature(report)
+#define  UDI_HID_GENERIC_ENABLE_EXT()        usb_hid_generic_enable()
+#define  UDI_HID_GENERIC_DISABLE_EXT()       usb_hid_generic_disable()
+#define  UDI_HID_GENERIC_REPORT_OUT(ptr)     usb_hid_generic_report_out(ptr)
+#define  UDI_HID_GENERIC_SET_FEATURE(report) usb_hid_generic_set_feature(report)
 
 //! Sizes of I/O reports
 #define  UDI_HID_REPORT_IN_SIZE             8

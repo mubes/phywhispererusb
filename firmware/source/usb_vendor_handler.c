@@ -17,7 +17,7 @@
 #include "stdio_serial.h"
 #include "ui.h"
 #include "genclk.h"
-#include "usb.h"
+#include "usb_vendor_handler.h"
 #include "usb_xmem.h"
 #include "fpga_program.h"
 #include <string.h>
@@ -64,22 +64,16 @@ void main_vendor_bulk_out_received(udd_ep_status_t status,
 void ctrl_change_pwr(void);
 void ctrl_fpga_reset(void);
 
-//this stuff just turns leds on and off
-void main_suspend_action(void)
-{
-}
 
-void main_resume_action(void)
-{
-}
 
-void main_sof_action(void)
-{
-    if (!main_b_vendor_enable)
-        return;
-}
-
-bool main_vendor_enable(void)
+/* ====================================================================================== */
+/* ====================================================================================== */
+/* ====================================================================================== */
+/* Publically accessible routines                                                         */
+/* ====================================================================================== */
+/* ====================================================================================== */
+/* ====================================================================================== */
+bool usb_vendor_enable(void)
 {
     main_b_vendor_enable = true;
     // Start data reception on OUT endpoints
@@ -92,12 +86,12 @@ bool main_vendor_enable(void)
 #endif
     return true;
 }
-
-void main_vendor_disable(void)
+/* ====================================================================================== */
+void usb_vendor_disable(void)
 {
     main_b_vendor_enable = false;
 }
-
+/* ====================================================================================== */
 #define REQ_MEMREAD_BULK 0x10
 #define REQ_MEMWRITE_BULK 0x11
 #define REQ_MEMREAD_CTRL 0x12
@@ -124,7 +118,7 @@ void ctrl_writemem_bulk(void);
 void ctrl_writemem_ctrl(void);
 void ctrl_progfpga_bulk(void);
 
-
+/* ====================================================================================== */
 void ctrl_readmem_bulk(void){
     uint32_t buflen = *(CTRLBUFFER_WORDPTR);
     uint32_t address = *(CTRLBUFFER_WORDPTR + 1);
@@ -142,7 +136,7 @@ void ctrl_readmem_bulk(void){
         );
     FPGA_releaselock();
 }
-
+/* ====================================================================================== */
 void ctrl_readmem_ctrl(void){
     uint32_t buflen = *(CTRLBUFFER_WORDPTR);
     uint32_t address = *(CTRLBUFFER_WORDPTR + 1);
@@ -162,8 +156,7 @@ void ctrl_readmem_ctrl(void){
     /* Start Transaction */
     FPGA_releaselock();
 }
-
-
+/* ====================================================================================== */
 void ctrl_writemem_ctrl(void){
     uint32_t buflen = *(CTRLBUFFER_WORDPTR);
     uint32_t address = *(CTRLBUFFER_WORDPTR + 1);
@@ -187,7 +180,7 @@ void ctrl_writemem_ctrl(void){
 
     FPGA_releaselock();
 }
-
+/* ====================================================================================== */
 void ctrl_writemem_bulk(void){
 //uint32_t buflen = *(CTRLBUFFER_WORDPTR);
     uint32_t address = *(CTRLBUFFER_WORDPTR + 1);
@@ -202,7 +195,7 @@ void ctrl_writemem_bulk(void){
     /* Transaction done in generic callback */
     FPGA_releaselock();
 }
-
+/* ====================================================================================== */
 static void ctrl_sam3ucfg_cb(void)
 {
     switch(udd_g_ctrlreq.req.wValue & 0xFF)
@@ -245,7 +238,7 @@ static void ctrl_sam3ucfg_cb(void)
         break;
     }
 }
-
+/* ====================================================================================== */
 void ctrl_progfpga_bulk(void){
 
     switch(udd_g_ctrlreq.req.wValue){
@@ -268,7 +261,7 @@ void ctrl_progfpga_bulk(void){
         break;
     }
 }
-
+/* ====================================================================================== */
 void ctrl_change_pwr(void) {
     switch(udd_g_ctrlreq.req.wValue) {
     case 0x00: //USB power off
@@ -288,14 +281,14 @@ void ctrl_change_pwr(void) {
         break;
     }
 }
-
+/* ====================================================================================== */
 void ctrl_fpga_reset(void) {
   gpio_set_pin_high(PIN_EBI_USB_SPARE0);
   gpio_set_pin_low(PIN_EBI_USB_SPARE0);
 }
 
-
-bool main_setup_out_received(void)
+/* ====================================================================================== */
+bool usb_vendor_setup_out_received(void)
 {
     //Add buffer if used
     udd_g_ctrlreq.payload = ctrlbuffer;
@@ -366,7 +359,8 @@ bool main_setup_out_received(void)
   && (0 != udd_g_ctrlreq.req.wLength)
 */
 
-bool main_setup_in_received(void)
+/* ====================================================================================== */
+bool usb_vendor_setup_in_received(void)
 {
     /*
       udd_g_ctrlreq.payload = main_buf_loopback;
@@ -413,7 +407,7 @@ bool main_setup_in_received(void)
     }
     return false;
 }
-
+/* ====================================================================================== */
 void main_vendor_bulk_in_received(udd_ep_status_t status,
                                   iram_size_t nb_transfered, udd_ep_id_t ep)
 {
@@ -427,7 +421,7 @@ void main_vendor_bulk_in_received(udd_ep_status_t status,
         FPGA_setlock(fpga_unlocked);
     }
 }
-
+/* ====================================================================================== */
 void main_vendor_bulk_out_received(udd_ep_status_t status,
                                    iram_size_t nb_transfered, udd_ep_id_t ep)
 {
@@ -471,3 +465,4 @@ void main_vendor_bulk_out_received(udd_ep_status_t status,
         sizeof(main_buf_loopback),
         main_vendor_bulk_out_received);
 }
+/* ====================================================================================== */

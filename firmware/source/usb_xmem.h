@@ -18,6 +18,15 @@
 #include <stdint.h>
 
 typedef enum fpga_lockstatus_e {fpga_unlocked = 0, fpga_generic, fpga_blockin, fpga_streamin, fpga_blockout, fpga_ctrlmem, fpga_usblocked} fpga_lockstatus_t;
+
+/* Access pointer for FPGA Interface */
+#define PSRAM_BASE_ADDRESS         (0x60000000)
+extern uint8_t volatile *xram;
+
+#define FPGA_ADDR_PINS (PIO_PB0 | PIO_PB1 | PIO_PB2 | PIO_PB3 | PIO_PB4 | PIO_PB5 | PIO_PB7 | PIO_PB8 )
+#define FPGA_ADDR_PORT PIOB
+
+/* ====================================================================================== */
 // Try to get the FPGA lock. Returns 1 if it's ours and 0 if we cannot proceed.
 // lockstatus: the lock we're trying to apply
 // interrupts_on: should interrupts be enabled
@@ -48,12 +57,6 @@ void FPGA_setaddr(uint32_t addr);
 
 void smc_fasttiming(void);
 void smc_normaltiming(void);
-
-/* Access pointer for FPGA Interface */
-#define PSRAM_BASE_ADDRESS         (0x60000000)
-extern uint8_t volatile *xram;
-
-#define FPGA_ADDR_PINS (PIO_PB0 | PIO_PB1 | PIO_PB2 | PIO_PB3 | PIO_PB4 | PIO_PB5 | PIO_PB7 | PIO_PB8 )
-#define FPGA_ADDR_PORT PIOB
+/* ====================================================================================== */
 
 #endif /* USB_XMEM_H_ */

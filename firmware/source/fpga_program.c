@@ -20,12 +20,15 @@
 #include "fpga_program.h"
 #include "spi.h"
 
+/* ====================================================================================== */
+
 /* FPGA Programming: Init pins, set to standby state */
 void fpga_program_init(void)
 {
     FPGA_NPROG_SETUP();
     FPGA_NPROG_HIGH();
 }
+/* ====================================================================================== */
 
 /* FPGA Programming Step 1: Erase FPGA, setup SPI interface */
 void fpga_program_setup1(void)
@@ -49,11 +52,15 @@ void fpga_program_setup1(void)
     usart_enable_tx(FPGA_PROG_USART);
 }
 
+/* ====================================================================================== */
+
 /* FPGA Programming Step 2: Prepare FPGA for receiving programming data */
 void fpga_program_setup2(void)
 {
     FPGA_NPROG_HIGH();
 }
+
+/* ====================================================================================== */
 
 //For debug only
 //uint32_t fpga_total_bs_len;
@@ -65,3 +72,5 @@ void fpga_program_sendbyte(uint8_t databyte)
     //fpga_total_bs_len++;
     usart_putchar(FPGA_PROG_USART, databyte);
 }
+
+/* ====================================================================================== */

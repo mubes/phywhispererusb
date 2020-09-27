@@ -35,29 +35,12 @@
 #ifndef _FPGA_PROGRAM_H_
 #define _FPGA_PROGRAM_H_
 
-/* Example of definitions you require:
-// FPGA Programming Pins
-#define PIN_FPGA_PROGRAM_GPIO	PIO_PA8_IDX
-#define PIN_FPGA_INITB_GPIO		PIO_PA9_IDX
-#define PIN_FPGA_DONE_GPIO		PIO_PA10_IDX
-// If using bit-bang mode you need these definitions:
-#define PIN_FPGA_CCLK_GPIO		PIO_PA15_IDX
-#define PIN_FPGA_DO_GPIO		PIO_PA14_IDX
-// If using SPI mode you need these definitions:
-#define SPI_MOSI_GPIO       (PIO_PA14_IDX)
-#define SPI_MOSI_FLAGS (PIO_PERIPH_A | PIO_DEFAULT)
-#define SPI_SPCK_GPIO       (PIO_PA15_IDX)
-#define SPI_SPCK_FLAGS (PIO_PERIPH_A | PIO_DEFAULT)
-*/
-
 #define PIN_FPGA_PROGRAM_GPIO PIO_PA20_IDX
 #define PIN_FPGA_INITB_GPIO PIO_PA21_IDX
 #define PIN_FPGA_DONE_GPIO PIO_PA19_IDX
 #define FPGA_PROG_USART USART0
 #define PIN_FPGA_CCLK_GPIO PIO_PA17_IDX
 #define PIN_FPGA_DO_GPIO PIO_PA18_IDX
-//#define PIN_FPGA_CCLK_FLAGS (PIO_PERIPH_A | PIO_DEFAULT)
-//#define PIN_FPGA_DO_FLAGS (PIO_PERIPH_A | PIO_DEFAULT)
 #define FPGA_PROG_USART_ID ID_USART0
 
 //! FPGA Programming Pins

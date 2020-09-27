@@ -44,57 +44,11 @@
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
-/*! \brief Notify via user interface that enumeration is ok
- * This is called by vendor interface when USB Host enable it.
- *
- * \retval true if vendor startup is successfully done
- */
-bool main_vendor_enable(void);
+#include "usb_main_handler.h"
+#include "usb_vendor_handler.h"
+#include "usb_cdc_handler.h"
+#include "usb_hid_generic_handler.h"
 
-/*! \brief Notify via user interface that enumeration is disabled
- * This is called by vendor interface when USB Host disable it.
- */
-void main_vendor_disable(void);
-
-/*! \brief Manages the leds behaviors
- * Called when a start of frame is received on USB line each 1ms.
- */
-void main_sof_action(void);
-
-/*! \brief Enters the application in low power mode
- * Callback called when USB host sets USB line in suspend state
- */
-void main_suspend_action(void);
-
-/*! \brief Turn on a led to notify active mode
- * Called when the USB line is resumed from the suspend state
- */
-void main_resume_action(void);
-
-/*! \brief Manage the reception of setup request OUT
- *
- * \retval true if request accepted
- */
-bool main_setup_out_received(void);
-
-/*! \brief Manage the reception of setup request IN
- *
- * \retval true if request accepted
- */
-bool main_setup_in_received(void);
-
-bool main_cdc_enable(uint8_t port);
-void main_cdc_disable(uint8_t port);
-void main_cdc_set_dtr(uint8_t port, bool b_enable);
-bool main_generic_enable(void);
-void main_generic_disable(void);
-void main_hid_set_feature(uint8_t* report);
-
-bool main_hid_report_out( void *ptr);
-void main_hid_set_feature(uint8_t* r);
-void main_generic_disable(void);
-bool main_generic_enable(void);
 void phywhisperer_setup_pins(void);
-bool main_extra_string(void);
 
 #endif // _MAIN_H_

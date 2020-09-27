@@ -43,7 +43,6 @@
 
 #include <asf.h>
 #include "ui.h"
-#include "tasks.h"
 
 void ui_init(void)
 {
