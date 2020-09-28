@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "conf_usb.h"
 #include "usb_hid_generic_handler.h"
-#include "report.h"
+#include "generics.h"
 
 static bool _enable;     // Indicator of if HID GENERIC is currently running
 

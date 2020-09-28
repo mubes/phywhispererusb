@@ -13,27 +13,27 @@ static volatile uint32_t _tc;
 
 /* Interrupt handler for SysTick - name is specific and set by the interrupt table */
 
-void SysTick_Handler(void)
+void SysTick_Handler( void )
 
 {
-  _tc++;
+    _tc++;
 }
 /* ====================================================================================== */
 
 /* Return current SysTick value */
 
-uint32_t systick_value(void)
+uint32_t systick_value( void )
 
 {
-  return _tc;
+    return _tc;
 }
 /* ====================================================================================== */
 
 /* Initialise SysTick counter */
 
-void systick_init(void)
+void systick_init( void )
 
 {
-  SysTick_Config(BOARD_MCK/TICKS_PER_SEC);
+    SysTick_Config( BOARD_MCK / TICKS_PER_SEC );
 }
 /* ====================================================================================== */

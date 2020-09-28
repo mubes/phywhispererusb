@@ -10,7 +10,7 @@
 #
 #----------------------------------------------------------------------------
 # Enable for debug configuration
-DEBUG=1
+#DEBUG=1
 
 # Path to support files (meta-files for building the app)
 SUPPORTPATH=support

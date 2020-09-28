@@ -41,8 +41,6 @@
 #include "udi.h"
 #include "udc.h"
 
-#include "report.h"
-
 /**
  * \ingroup udc_group
  * \defgroup udc_group_interne Implementation of UDC
@@ -796,8 +794,6 @@ static bool udc_req_std_dev_set_configuration(void)
 {
 	uint8_t iface_num;
 
-	DBG("Set config request" EOL);
-
 	// Check request length
 	if (udd_g_ctrlreq.req.wLength) {
 		return false;
@@ -850,7 +846,6 @@ static bool udc_req_std_dev_set_configuration(void)
 			return false;
 		}
 	}
-	DBG("CONFIG SET OK" EOL);
 	return true;
 }
 
@@ -918,7 +913,6 @@ static bool udc_req_std_iface_set_setting(void)
 	}
 
 	// Enable new setting
-	DBG("Iface %d enable" EOL,iface_num);
 	return udc_iface_enable(iface_num, setting_num);
 }
 

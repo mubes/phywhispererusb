@@ -475,7 +475,7 @@ clean_all : clean
 	$(Q)$(RMD) .dep
 
 pretty:
-	$(Q)-$(ASTYLE) --options=$(SUPPORTPATH)/astyle.conf -i "$(SOURCEPATH)/inc/*.h" "$(SOURCEPATH)/*.c"
+	$(Q)-$(ASTYLE) --options=$(SUPPORTPATH)/astyle.conf -i "$(SOURCEPATH)/inc/*.h" "$(SOURCEPATH)/*.c" "$(LIBRARYPATH)/*.c" "$(LIBRARYPATH)/inc/*.h"
 
 # Include the dependency files.
 -include $(wildcard .dep/*)

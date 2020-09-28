@@ -2,8 +2,10 @@
 #include "genclk.h"
 #include "fpga_program.h"
 #include "phyw_driver.h"
-#include "report.h"
 #include "systick.h"
+
+#define REPORT_LEVEL 4
+#include "generics.h"
 
 char g_usb_serial_number[USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1]; /* Serial Number - will be read by device ID */
 
@@ -40,8 +42,6 @@ int main( void )
 {
     uint32_t serial_number[4];
 
-    DBG( "Firmware starting =========================================" EOL );
-
     // Read Device-ID from SAM3U. Do this before enabling interrupts etc.
     flash_read_unique_id( serial_number, sizeof( serial_number ) );
 
@@ -50,11 +50,13 @@ int main( void )
 
     // Initialize the sleep manager
     sleepmgr_init();
-    sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
+    sleepmgr_lock_mode( SLEEPMGR_WAIT_FAST );
 
     sysclk_init();
     systick_init();
     phyw_driver_setup_pins();
+
+    DBG( "Firmware starting =========================================" EOL );
 
     // Convert serial number to ASCII for USB Serial number
     snprintf( g_usb_serial_number, USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1, "%08lx%08lx%08lx%08lx",
@@ -76,6 +78,7 @@ int main( void )
     while ( 1 )
     {
         sleepmgr_enter_sleep();
+
         if ( phyw_driver_button_pressed() )
         {
             phyw_driver_pwr_toggle();

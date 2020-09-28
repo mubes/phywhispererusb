@@ -88,7 +88,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define  UDI_CDC_ENABLE_EXT(port)         usb_cdc_enable(port)
 #define  UDI_CDC_DISABLE_EXT(port)        usb_cdc_disable(port)
 #define  UDI_CDC_RX_NOTIFY(port)          usb_cdc_uart_rx_notify(port)
-#define  UDI_CDC_TX_EMPTY_NOTIFY(port)
+#define  UDI_CDC_TX_EMPTY_NOTIFY(port)    usb_cdc_uart_tx_notify(port)
 #define  UDI_CDC_SET_CODING_EXT(port,cfg) usb_cdc_uart_config(port,cfg)
 #define  UDI_CDC_SET_DTR_EXT(port,set)    usb_cdc_set_dtr(port,set)
 #define  UDI_CDC_SET_RTS_EXT(port,set)

@@ -21,9 +21,6 @@ APPSRC += fpga_program.c
 # Main app
 APPSRC += main.c
 
-# Reporting infrastructure
-APPSRC += report.c
-
 SRC += $(patsubst %,$(SOURCEPATH)/%,$(APPSRC))
 
 # -----------------------------------------------------------------------------
