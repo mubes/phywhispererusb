@@ -21,6 +21,9 @@ THIRDPARTY=thirdparty
 # Path to hal files (standard multi-project files that don't change per app)
 HALPATH=$(THIRDPARTY)/hal
 
+# Path to libraries (files that are shared across multiple projects)
+LIBRARYPATH=libs
+
 # Path to config (files relating to app that setup hal or thirdparty materials)
 CONFIG=config
 
@@ -73,6 +76,9 @@ endif
 
 # Source code for our app
 include $(SOURCEPATH)/Makefile.inc
+
+# Source code for any libs
+include $(SUPPORTPATH)/Makefile.libs
 
 # Other files indicating what is to be built
 include $(SUPPORTPATH)/Makefile.thirdparty.hal.sam3u

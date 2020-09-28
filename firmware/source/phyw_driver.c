@@ -1,7 +1,18 @@
 #include <asf.h>
+
 #include "phyw_driver.h"
 #include "fpga_program.h"
 #include "usb_xmem.h"
+#include "systick.h"
+
+/* Storage for power source and if it's switched on or not */
+static enum phyw_driver_pwr _powerSource;
+static bool _powerOn;
+
+
+#define BUTTON_IN PIO_PA24_IDX
+#define F_VB5V PIO_PA26_IDX
+#define F_VBHOST PIO_PA25_IDX
 
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -11,69 +22,148 @@
 /* ====================================================================================== */
 /* ====================================================================================== */
 
-void phyw_driver_no_pwr( void )
+enum phyw_driver_pwr phyw_driver_get_pwr_source( void )
+
 {
-    PIOA->PIO_CODR = ( 1 << F_VBHOST ); //disable sniff power
-    PIOA->PIO_CODR = ( 1 << F_VB5V ); //disable host power
+    return _powerSource;
 }
 
 /* ====================================================================================== */
 
-void phyw_driver_5V_pwr( void )
+bool phyw_driver_get_pwr_on( void )
+
 {
-    PIOA->PIO_CODR = ( 1 << F_VBHOST ); //disable sniff power
-    PIOA->PIO_SODR = ( 1 << F_VB5V ); //enable host power
+    return _powerOn;
 }
 
 /* ====================================================================================== */
 
-void phyw_driver_host_pwr( void )
+void phyw_driver_set_pwr_source( enum phyw_driver_pwr e )
+
 {
-    PIOA->PIO_CODR = ( 1 << F_VB5V ); //disable host power
-    PIOA->PIO_SODR = ( 1 << F_VBHOST ); //enable sniff power
+    if ( e < PWR_MAX_OPTION )
+    {
+        if ( _powerOn )
+        {
+            phyw_driver_set_pwr_on( false );
+            _powerSource = e;
+            phyw_driver_set_pwr_on( true );
+        }
+        else
+        {
+            _powerSource = e;
+        }
+    }
 }
 
 /* ====================================================================================== */
 
-void phyw_driver_switch_usb_pwr( void )
+void phyw_driver_set_pwr_on( bool isOn )
+
 {
-    if ( ( PIOA->PIO_ODSR & ( 1 << F_VBHOST ) ) )
+    enum phyw_driver_pwr e = isOn ? _powerSource : PWR_OFF;
+
+    switch ( e )
     {
-        //Switch to host power mode
-        phyw_driver_5V_pwr();
-    }
-    else
-    {
-        //Switch to sniff power mode
-        phyw_driver_host_pwr();
+        case PWR_OFF: /* No power supplied ------------------------------------------ */
+            PIOA->PIO_CODR = ( 1 << F_VBHOST ); /* disable sniff power */
+            PIOA->PIO_CODR = ( 1 << F_VB5V );   /* disable host power */
+            _powerOn = false;
+
+            break;
+
+        case PWR_5V: /* Power from 5v rail of PHYW ---------------------------------- */
+            PIOA->PIO_CODR = ( 1 << F_VBHOST ); /* disable sniff power */
+            PIOA->PIO_SODR = ( 1 << F_VB5V ); /* enable host power */
+            _powerOn = true;
+
+            break;
+
+        case PWR_HOST: /* Power from host ------------------------------------------- */
+            PIOA->PIO_CODR = ( 1 << F_VB5V ); /* disable host power */
+            PIOA->PIO_SODR = ( 1 << F_VBHOST ); /* enable sniff power */
+            _powerOn = true;
+            break;
+
+        default: /* ----------------------------------------------------------------- */
+            break;
     }
 }
 
 /* ====================================================================================== */
 
-uint8_t phyw_driver_get_pwr_st_from_io( void )
+bool phyw_driver_pwr_toggle( void )
+
 {
-    if ( !( PIOA->PIO_ODSR & ( 1 << F_VBHOST ) ) && !( PIOA->PIO_ODSR & ( 1 << F_VB5V ) ) )
+    phyw_driver_set_pwr_on( !_powerOn );
+    return ( _powerOn );
+}
+
+/* ====================================================================================== */
+
+bool phyw_driver_button_down( void )
+
+{
+    return ( !( PIOA->PIO_PDSR & ( 1 << BUTTON_IN ) ) );
+}
+
+/* ====================================================================================== */
+
+bool phyw_driver_button_pressed( void )
+
+{
+#define BUTTON_HOLD_MIN_TIME_MS (50)
+
+    static enum buttonState
     {
-        //USB off
-        return 0;
-    }
-    else if ( !( PIOA->PIO_ODSR & ( 1 << F_VBHOST ) ) && ( PIOA->PIO_ODSR & ( 1 << F_VB5V ) ) )
+        BUTTON_UP,
+        BUTTON_DOWN_WAIT,
+        BUTTON_UP_WAIT
+    } b;                             /* Current state of the button press machine */
+    static uint32_t _buttonDownTime; /* When the button was depressed */
+
+    switch ( b )
     {
-        //Host power
-        return 1;
-    }
-    else if ( ( PIOA->PIO_ODSR & ( 1 << F_VBHOST ) ) && !( PIOA->PIO_ODSR & ( 1 << F_VB5V ) ) )
-    {
-        //Sniffer power
-        return 2;
-    }
-    else
-    {
-        //Everything's on...
-        return 0xFF;
+        case BUTTON_UP: /* We are waiting for the button to go down -------------------- */
+            if ( phyw_driver_button_down() )
+            {
+                _buttonDownTime = systick_value() + MILLIS_TO_TICKS( BUTTON_HOLD_MIN_TIME_MS );
+                b = BUTTON_DOWN_WAIT;
+            }
+
+            break;
+
+        case BUTTON_DOWN_WAIT: /* We are waiting to get a stable reading --------------- */
+            if ( systick_value() > _buttonDownTime )
+            {
+                if ( !phyw_driver_button_down() )
+                {
+                    /* Wasn't held for minimum time, forget it */
+                    b = BUTTON_UP;
+                }
+                else
+                {
+                    /* Was held, we'll return the press as soon as its released */
+                    b = BUTTON_UP_WAIT;
+                }
+            }
+
+            break;
+
+        case BUTTON_UP_WAIT: /* We are waiting for the button to be released ---------- */
+            if ( !phyw_driver_button_down() )
+            {
+                b = BUTTON_UP;
+                return true;
+            }
+
+            break;
+
+        default: /* ------------------------------------------------------------------- */
+            break;
     }
 
+    return false;
 }
 
 /* ====================================================================================== */
@@ -88,7 +178,8 @@ void phyw_driver_setup_pins( void )
 
     PIOA->PIO_OER = ( 1 << F_VB5V ) | ( 1 << F_VBHOST ); //enable output mode on VBHOST/VBSNIFF pins
 
-    phyw_driver_host_pwr();
+    phyw_driver_set_pwr_source( PWR_HOST );
+    phyw_driver_set_pwr_on( false );
 
     //Configure FPGA to allow programming via USB
     fpga_program_init();

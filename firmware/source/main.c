@@ -3,16 +3,17 @@
 #include "fpga_program.h"
 #include "phyw_driver.h"
 #include "report.h"
+#include "systick.h"
 
-//Serial Number - will be read by device ID
-char usb_serial_number[33] = "000000000000DEADBEEF";
-void ( *pwr_list[] )( void ) = {phyw_driver_no_pwr, phyw_driver_5V_pwr, phyw_driver_host_pwr};
+char g_usb_serial_number[USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1]; /* Serial Number - will be read by device ID */
+
 /* ====================================================================================== */
-/* ====================================================================================== */
-/* ====================================================================================== */
-static void _hacky_delay( void )
+static void _delay_ms( uint32_t ms )
+
 {
-    for ( volatile uint32_t i = 0; i < 250000; i++ );
+    uint32_t endT = systick_value() + MILLIS_TO_TICKS( ms );
+
+    while ( systick_value() < endT );
 }
 /* ====================================================================================== */
 
@@ -48,59 +49,35 @@ int main( void )
     cpu_irq_enable();
 
     // Initialize the sleep manager
-    sleepmgr_init();
+    //sleepmgr_init();
 
     sysclk_init();
+    systick_init();
     phyw_driver_setup_pins();
 
-    //Convert serial number to ASCII for USB Serial number
-    for ( unsigned int i = 0; i < 4; i++ )
-    {
-        sprintf( usb_serial_number + ( i * 8 ), "%08x", ( unsigned int )serial_number[i] );
-    }
-
-    usb_serial_number[32] = 0;
+    // Convert serial number to ASCII for USB Serial number
+    snprintf( g_usb_serial_number, USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1, "%08lx%08lx%08lx%08lx",
+              serial_number[0], serial_number[1], serial_number[2], serial_number[3] );
 
     _genclk_enable_config( GENCLK_PCK_1, GENCLK_PCK_SRC_MCK, GENCLK_PCK_PRES_1 );
 
     /* Stop the USB unterface (needed for debug restarts without power cycle) */
     udc_stop();
-    _hacky_delay();
-    _hacky_delay();
-    _hacky_delay();
-    _hacky_delay();
+    _delay_ms( 200 );
 
     udc_start();
     gpio_set_pin_high( LED0_GPIO );
-    gpio_set_pin_low( LED1_GPIO );
+    gpio_set_pin_high( LED1_GPIO );
 
-    phyw_driver_no_pwr();
-    USB_PWR_STATE = 0;
+    phyw_driver_set_pwr_on( false );
 
+    /* Main application loop */
     while ( 1 )
     {
-        // sleepmgr_enter_sleep();
-        uint8_t button_status = !( PIOA->PIO_PDSR & ( 1 << BUTTON_IN ) );
-
-        if ( button_status )
+        //sleepmgr_enter_sleep();
+        if ( phyw_driver_button_pressed() )
         {
-            _hacky_delay(); //delay to try to debounce
-
-            while ( !( PIOA->PIO_PDSR & ( 1 << BUTTON_IN ) ) ); //wait for trigger to be unpressed
-
-            if ( USB_PWR_STATE && USB_PWR_STATE <= 2 )
-            {
-                if ( phyw_driver_get_pwr_st_from_io() ) //currently on
-                {
-                    phyw_driver_no_pwr();
-                }
-                else
-                {
-                    pwr_list[USB_PWR_STATE]();
-                }
-            }
-
-            _hacky_delay();
+            phyw_driver_pwr_toggle();
         }
     }
 }
