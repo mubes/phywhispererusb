@@ -1,11 +1,6 @@
 # Hey Emacs, this is a -*- makefile -*-
 #----------------------------------------------------------------------------
 #
-# General Makefile for ChipWhisperer SimpleSerial-AES Program
-# (Note that sources and targets are not defined here, 
-#  this file is for setting rules and recipies.)
-#
-#----------------------------------------------------------------------------
 # On command line:
 #
 # make all = Make software.
@@ -52,15 +47,10 @@ OBJDIR ?= objdir
 ##########################################################################
 ##########################################################################
 
-#VPATH += 
-
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-ifeq ($(OPT),)
-  OPT = 0
-endif
-
+  OPT ?= 0
 
 # Debugging format.
 #     Native formats for AVR-GCC's -g are dwarf-2 [default] or stabs.
@@ -68,13 +58,11 @@ endif
 #     AVR [Extended] COFF format requires stabs, plus an avr-objcopy run.
 DEBUGTYPE ?= dwarf-2
 
-
 # List any extra directories to look for include files here.
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS += $(SOURCEPATH)
-
+EXTRAINCDIRS += $(patsubst %,%/inc,$(SOURCEPATH))
 
 # Compiler flag to set the C Standard level.
 #     c89   = "ANSI" C
@@ -86,10 +74,8 @@ CSTANDARD = -std=gnu99
 # Place -D or -U options here for C sources
 CDEFS += -DF_CPU=$(F_CPU)UL
 
-
 # Place -D or -U options here for ASM sources
 ADEFS += -DF_CPU=$(F_CPU)
-
 
 # Place -D or -U options here for C++ sources
 CPPDEFS += -DF_CPU=$(F_CPU)UL
@@ -111,17 +97,24 @@ CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -fshort-enums
+CFLAGS += -fdata-sections
+CFLAGS += -ffunction-sections
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
-#CFLAGS += -mshort-calls
-#CFLAGS += -fno-unit-at-a-time
-#CFLAGS += -Wundef
-#CFLAGS += -Wunreachable-code
-#CFLAGS += -Wsign-compare
+CFLAGS += -Wmissing-prototypes
+CFLAGS += -Wchar-subscripts
+CFLAGS += -Wformat=2 
+CFLAGS += -mlong-calls
+CFLAGS += -fno-strict-aliasing
+CFLAGS += -Wcomment
+CFLAGS += -Wundef
+CFLAGS += -Wunreachable-code
+CFLAGS += -Wsign-compare
 CFLAGS += -Wa,-adhlns=$(addprefix $(OBJDIR)/,$(notdir $(<:%.c=%.lst)))
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 
+MCU_FLAGS = -mcpu=cortex-m3
 
 #---------------- Compiler Options C++ ----------------
 #  -g*:          generate debugging information
@@ -140,14 +133,11 @@ CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
 CPPFLAGS += -Wundef
-#CPPFLAGS += -mshort-calls
-#CPPFLAGS += -fno-unit-at-a-time
-#CPPFLAGS += -Wstrict-prototypes
-#CPPFLAGS += -Wunreachable-code
-#CPPFLAGS += -Wsign-compare
+CPPFLAGS += -Wstrict-prototypes
+CPPFLAGS += -Wunreachable-code
+CPPFLAGS += -Wsign-compare
 CPPFLAGS += -Wa,-adhlns=$(addprefix $(OBJDIR)/,$(notdir $(<:%.cpp=%.lst)))
 CPPFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
-#CPPFLAGS += $(CSTANDARD)
 
 
 #---------------- Assembler Options ----------------
@@ -212,6 +202,11 @@ EXTMEMOPTS +=
 #    -Map:      create map file
 #    --cref:    add cross reference to  map file
 LDFLAGS += -Wl,-Map=$(TARGET-PLAT).map,--cref
+
+LDFLAGS += -mthumb
+LDFLAGS += -Wl,--start-group -L $(HALPATH)/$(PLATFORM)/ -lm -Wl,--end-group
+LDFLAGS += -T $(LINKERFILE)
+LDFLAGS += -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--cref
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(MATH_LIB)
@@ -219,15 +214,6 @@ LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB)
 
 #============================================================================
 
-# Define programs and commands.
-SHELL = sh
-
-REMOVE = rm -f --
-REMOVEDIR = rm -rf
-MAKEDIR = mkdir
-MAKEPATH = mkdir -p
-COPY = cp
-WINSHELL = cmd
 #Depending on if echo is unix or windows, they respond differently to no arguments. Windows will annoyingly
 #print "echo OFF", so instead we're forced to give it something to echo. The windows one will also print
 #passed ' or " symbols, so we use a . as it's pretty small...
@@ -306,10 +292,10 @@ sizeafter: build
 	@$(ELFSIZE)
 
 $(OBJDIR):
-	$(Q)$(MAKEDIR) $(OBJDIR)
+	$(Q)$(MD) $(OBJDIR)
 
 .dep:
-	$(Q)$(MAKEDIR) .dep
+	$(Q)$(MD) .dep
 
 # Display compiler version information.
 gccversion :
@@ -326,7 +312,7 @@ program: $(TARGET-PLAT).hex $(TARGET-PLAT).eep
 #     define the reset signal, load the target file, connect to target, and set 
 #     a breakpoint at main().
 gdb-config: 
-	@$(REMOVE) $(GDBINIT_FILE)
+	@$(RM) $(GDBINIT_FILE)
 	@echo define reset >> $(GDBINIT_FILE)
 	@echo SIGNAL SIGHUP >> $(GDBINIT_FILE)
 	@echo end >> $(GDBINIT_FILE)
@@ -428,7 +414,7 @@ extcoff: $(TARGET-PLAT).elf
 $(OBJDIR)/%.o : %.c clean_objs $(OBJDIR) .dep gccversion
 	@$(ECHO_BLANK)
 	@echo $(MSG_COMPILING) $<
-	$(Q)$(MAKEPATH) $(basename $@)
+	$(Q)$(MP) $(basename $@)
 	$(Q)$(CC) -c $(ALL_CFLAGS) $< -o $@
 	$(Q)$(CC) -S $(ALL_CFLAGS) $< -o $@.s
 
@@ -436,20 +422,20 @@ $(OBJDIR)/%.o : %.c clean_objs $(OBJDIR) .dep gccversion
 # Compile: create object files from C++ source files.
 $(OBJDIR)/%.o : %.cpp clean_objs $(OBJDIR) .dep gccversion
 	@$(ECHO_BLANK)
-	$(Q)$(MAKEPATH) $(basename $@)
+	$(Q)$(MP) $(basename $@)
 	@echo $(MSG_COMPILING_CPP) $<
 	$(Q)$(CC) -c $(ALL_CPPFLAGS) $< -o $@ 
 
 
 # Compile: create assembler files from C source files.
 %.s : %.c
-	$(Q)$(MAKEPATH) $(basename $@)
+	$(Q)$(MP) $(basename $@)
 	$(CC) -S $(ALL_CFLAGS) $< -o $@
 
 
 # Compile: create assembler files from C++ source files.
 %.s : %.cpp
-	$(Q)$(MAKEPATH) $(basename $@)
+	$(Q)$(MP) $(basename $@)
 	$(CC) -S $(ALL_CPPFLAGS) $< -o $@
 
 
@@ -462,31 +448,34 @@ $(OBJDIR)/%.o : %.S clean_objs $(OBJDIR) .dep gccversion
 
 # Create preprocessed source for use in sending a bug report.
 %.i : %.c
-	$(Q)$(MAKEPATH) $(basename $@)
+	$(Q)$(MP) $(basename $@)
 	$(Q)$(CC) -E $(MCU_FLAGS) -I. $(CFLAGS) $< -o $@ 
 
 # Clean all object files specific to this platform
 clean_objs :
-	$(Q)$(REMOVEDIR) $(OBJDIR)
-	$(Q)$(REMOVE) $(SRC:.c=.s)
-	$(Q)$(REMOVE) $(SRC:.c=.d)
-	$(Q)$(REMOVE) $(SRC:.c=.i)
+	$(Q)$(RMD) $(OBJDIR)
+	$(Q)$(RM) $(SRC:.c=.s)
+	$(Q)$(RM) $(SRC:.c=.d)
+	$(Q)$(RM) $(SRC:.c=.i)
 
 # Target: clean project.
 clean: clean_objs
 	@$(ECHO_BLANK)
 	@echo $(MSG_CLEANING)
-	$(Q)$(REMOVE) $(TARGET-PLAT).hex
-	$(Q)$(REMOVE) $(TARGET-PLAT).eep
-	$(Q)$(REMOVE) $(TARGET-PLAT).cof
-	$(Q)$(REMOVE) $(TARGET-PLAT).elf
-	$(Q)$(REMOVE) $(TARGET-PLAT).map
-	$(Q)$(REMOVE) $(TARGET-PLAT).sym
-	$(Q)$(REMOVE) $(TARGET-PLAT).lss
-	$(Q)$(REMOVE) $(TARGET-PLAT).bin
+	$(Q)$(RM) $(TARGET-PLAT).hex
+	$(Q)$(RM) $(TARGET-PLAT).eep
+	$(Q)$(RM) $(TARGET-PLAT).cof
+	$(Q)$(RM) $(TARGET-PLAT).elf
+	$(Q)$(RM) $(TARGET-PLAT).map
+	$(Q)$(RM) $(TARGET-PLAT).sym
+	$(Q)$(RM) $(TARGET-PLAT).lss
+	$(Q)$(RM) $(TARGET-PLAT).bin
 
 clean_all : clean
-	$(Q)$(REMOVEDIR) .dep
+	$(Q)$(RMD) .dep
+
+pretty:
+	$(Q)-$(ASTYLE) --options=$(CONFIG)/astyle.conf -i "$(SOURCEPATH)/inc/*.h" "$(SOURCEPATH)/*.c"
 
 # Include the dependency files.
 -include $(wildcard .dep/*)

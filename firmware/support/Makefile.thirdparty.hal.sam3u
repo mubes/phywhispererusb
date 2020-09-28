@@ -6,18 +6,3 @@ EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc
 EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc/sam
 EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc/sam_twi
 
-LINKERFILE = $(SUPPORTPATH)/flash-$(PLATFORM).ld
-
-MCU_FLAGS = -mcpu=cortex-m3
-CC = arm-none-eabi-gcc
-OBJCOPY = arm-none-eabi-objcopy
-OBJDUMP = arm-none-eabi-objdump
-SIZE = arm-none-eabi-size
-AR = arm-none-eabi-ar rcs
-NM = arm-none-eabi-nm
-
-CFLAGS += -fdata-sections -ffunction-sections -mlong-calls -g3 -Wall -pipe -fno-strict-aliasing -Wall -Wstrict-prototypes -Wmissing-prototypes -Wchar-subscripts -Wcomment -Wformat=2 --param max-inline-insns-single=500
-
-CFLAGS += -D__SAM3U2C__ -DARM_MATH_CM3=true -Dprintf=iprintf -DUDD_ENABLE -DBOARD=CW610 -Dscanf=iscanf -DPLATFORMCW610=1
-
-LDFLAGS += -mthumb -Wl,--start-group -L $(HALPATH)/$(PLATFORM)/ -lm -Wl,--end-group   -T $(LINKERFILE) -Wl,--gc-sections -Wl,--entry=Reset_Handler -Wl,--cref -mthumb

@@ -272,8 +272,6 @@ extern char usb_serial_number[33];
 #include "udi_cdc.h"
 #include "udi_vendor.h"
 #include "udi_hid_generic.h"
-#include "uart.h"
-#include "ui.h"
 #include "main.h"
 
 #endif // _CONF_USB_H_

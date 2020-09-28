@@ -60,7 +60,7 @@
 #include <status_codes.h>
 
 // From module: Delay routines
-#include <delay.h>
+//*#include <delay.h>
 
 // From module: EEFC - Enhanced Embedded Flash Controller
 #include <efc.h>
@@ -90,9 +90,6 @@
 // From module: Part identification macros
 #include <parts.h>
 
-// From module: SAM3U EK LED support enabled
-#include <led.h>
-
 // From module: SAM3U startup code
 #include <exceptions.h>
 
@@ -108,24 +105,6 @@
 
 // From module: System Clock Control - SAM3U implementation
 #include <sysclk.h>
-
-// From module: TC - Timer Counter
-#include <tc.h>
-
-// From module: TWI - Two-Wire Interface - SAM implementation
-#include <sam_twi/twi_master.h>
-#include <sam_twi/twi_slave.h>
-#include <twi_master.h>
-#include <twi_slave.h>
-
-// From module: TWI - Two-wire Interface
-#include <twi.h>
-
-// From module: UART - Univ. Async Rec/Trans
-#include <uart.h>
-
-// From module: USART - Serial interface - SAM implementation for devices with both UART and USART
-//#include <serial.h>
 
 // From module: USART - Univ. Syn Async Rec/Trans
 #include <usart.h>
