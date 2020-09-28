@@ -49,7 +49,8 @@ int main( void )
     cpu_irq_enable();
 
     // Initialize the sleep manager
-    //sleepmgr_init();
+    sleepmgr_init();
+    sleepmgr_lock_mode(SLEEPMGR_SLEEP_WFI);
 
     sysclk_init();
     systick_init();
@@ -67,14 +68,14 @@ int main( void )
 
     udc_start();
     gpio_set_pin_high( LED0_GPIO );
-    gpio_set_pin_high( LED1_GPIO );
+    gpio_set_pin_low( LED1_GPIO );
 
     phyw_driver_set_pwr_on( false );
 
     /* Main application loop */
     while ( 1 )
     {
-        //sleepmgr_enter_sleep();
+        sleepmgr_enter_sleep();
         if ( phyw_driver_button_pressed() )
         {
             phyw_driver_pwr_toggle();
