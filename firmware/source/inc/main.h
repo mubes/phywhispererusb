@@ -49,6 +49,4 @@
 #include "usb_cdc_handler.h"
 #include "usb_hid_generic_handler.h"
 
-void phywhisperer_setup_pins(void);
-
 #endif // _MAIN_H_

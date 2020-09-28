@@ -6,10 +6,10 @@
 
 /* ====================================================================================== */
 
-bool usb_hid_generic_enable(void);
-void usb_hid_generic_disable(void);
-void usb_hid_generic_set_feature(uint8_t* r);
-bool usb_hid_generic_report_out( void *ptr);
+bool usb_hid_generic_enable( void );
+void usb_hid_generic_disable( void );
+void usb_hid_generic_set_feature( uint8_t *r );
+bool usb_hid_generic_report_out( void *ptr );
 
 /* ====================================================================================== */
 #endif

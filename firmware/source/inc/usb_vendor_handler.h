@@ -32,25 +32,25 @@ extern volatile bool g_captureinprogress;
  * \retval true if vendor startup is successfully done
  */
 
-bool usb_vendor_enable(void);
+bool usb_vendor_enable( void );
 
 /*! \brief Notify via user interface that enumeration is disabled
  * This is called by vendor interface when USB Host disable it.
  */
 
-void usb_vendor_disable(void);
+void usb_vendor_disable( void );
 
 /*! \brief Manage the reception of setup request OUT
  *
  * \retval true if request accepted
  */
-bool usb_vendor_setup_out_received(void);
+bool usb_vendor_setup_out_received( void );
 
 /*! \brief Manage the reception of setup request IN
  *
  * \retval true if request accepted
  */
-bool usb_vendor_setup_in_received(void);
+bool usb_vendor_setup_in_received( void );
 
 /* ====================================================================================== */
 

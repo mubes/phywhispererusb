@@ -13,28 +13,28 @@ static bool _enable;     // Indicator of if HID GENERIC is currently running
 /* ====================================================================================== */
 /* ====================================================================================== */
 /* ====================================================================================== */
-bool usb_hid_generic_enable(void)
+bool usb_hid_generic_enable( void )
 {
-  _enable = true;
-  DBG("Generic enable" EOL);
-  return true;
+    _enable = true;
+    DBG( "Generic enable" EOL );
+    return true;
 }
 /* ====================================================================================== */
-void usb_hid_generic_disable(void)
+void usb_hid_generic_disable( void )
 {
-  DBG("Generic disable" EOL);
-  _enable = false;
+    DBG( "Generic disable" EOL );
+    _enable = false;
 }
 /* ====================================================================================== */
-void usb_hid_generic_set_feature(uint8_t* r)
+void usb_hid_generic_set_feature( uint8_t *r )
 {
-  DBG("Set feature" EOL);
+    DBG( "Set feature" EOL );
 }
 /* ====================================================================================== */
-bool usb_hid_generic_report_out( void *ptr)
+bool usb_hid_generic_report_out( void *ptr )
 
 {
-  DBG("HID Report out" EOL);
-  return true;
+    DBG( "HID Report out" EOL );
+    return true;
 }
 /* ====================================================================================== */

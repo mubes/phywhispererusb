@@ -44,39 +44,39 @@
 #define FPGA_PROG_USART_ID ID_USART0
 
 //! FPGA Programming Pins
-#define PIN_FPGA_PROGRAM_FLAGS	(PIO_TYPE_PIO_OUTPUT_1 | PIO_DEFAULT)
-#define FPGA_NPROG_LOW()		gpio_set_pin_low(PIN_FPGA_PROGRAM_GPIO)
-#define FPGA_NPROG_HIGH()		gpio_set_pin_high(PIN_FPGA_PROGRAM_GPIO)
-#define FPGA_NPROG_SETUP()		gpio_configure_pin(PIN_FPGA_PROGRAM_GPIO, PIN_FPGA_PROGRAM_FLAGS)
+#define PIN_FPGA_PROGRAM_FLAGS  (PIO_TYPE_PIO_OUTPUT_1 | PIO_DEFAULT)
+#define FPGA_NPROG_LOW()        gpio_set_pin_low(PIN_FPGA_PROGRAM_GPIO)
+#define FPGA_NPROG_HIGH()       gpio_set_pin_high(PIN_FPGA_PROGRAM_GPIO)
+#define FPGA_NPROG_SETUP()      gpio_configure_pin(PIN_FPGA_PROGRAM_GPIO, PIN_FPGA_PROGRAM_FLAGS)
 
-#define PIN_FPGA_INITB_FLAGS	(PIO_TYPE_PIO_OUTPUT_1 | PIO_DEFAULT | PIO_OPENDRAIN)
-#define FPGA_INITB_LOW()		gpio_set_pin_low(PIN_FPGA_INITB_GPIO)
-#define FPGA_INITB_HIGH()		gpio_set_pin_high(PIN_FPGA_INITB_GPIO)
-#define FPGA_INITB_SETUP()		gpio_configure_pin(PIN_FPGA_INITB_GPIO, PIN_FPGA_INITB_FLAGS)
+#define PIN_FPGA_INITB_FLAGS    (PIO_TYPE_PIO_OUTPUT_1 | PIO_DEFAULT | PIO_OPENDRAIN)
+#define FPGA_INITB_LOW()        gpio_set_pin_low(PIN_FPGA_INITB_GPIO)
+#define FPGA_INITB_HIGH()       gpio_set_pin_high(PIN_FPGA_INITB_GPIO)
+#define FPGA_INITB_SETUP()      gpio_configure_pin(PIN_FPGA_INITB_GPIO, PIN_FPGA_INITB_FLAGS)
 
 #define PIN_FPGA_DONE_FLAGS     (PIO_TYPE_PIO_INPUT | PIO_DEFAULT)
-#define	FPGA_ISDONE()			gpio_pin_is_high(PIN_FPGA_DONE_GPIO)
+#define FPGA_ISDONE()           gpio_pin_is_high(PIN_FPGA_DONE_GPIO)
 
-#define PIN_FPGA_CCLK_FLAGS		(PIO_TYPE_PIO_OUTPUT_0 | PIO_DEFAULT)
-#define FPGA_CCLK_LOW()			gpio_set_pin_low(PIN_FPGA_CCLK_GPIO)
-#define FPGA_CCLK_HIGH()		gpio_set_pin_high(PIN_FPGA_CCLK_GPIO)
-#define FPGA_CCLK_SETUP()		gpio_configure_pin(PIN_FPGA_CCLK_GPIO, PIN_FPGA_CCLK_FLAGS)
+#define PIN_FPGA_CCLK_FLAGS     (PIO_TYPE_PIO_OUTPUT_0 | PIO_DEFAULT)
+#define FPGA_CCLK_LOW()         gpio_set_pin_low(PIN_FPGA_CCLK_GPIO)
+#define FPGA_CCLK_HIGH()        gpio_set_pin_high(PIN_FPGA_CCLK_GPIO)
+#define FPGA_CCLK_SETUP()       gpio_configure_pin(PIN_FPGA_CCLK_GPIO, PIN_FPGA_CCLK_FLAGS)
 
-#define PIN_FPGA_DO_FLAGS		(PIO_TYPE_PIO_OUTPUT_0 | PIO_DEFAULT)
-#define FPGA_DO_LOW()			gpio_set_pin_low(PIN_FPGA_DO_GPIO)
-#define FPGA_DO_HIGH()			gpio_set_pin_high(PIN_FPGA_DO_GPIO)
-#define FPGA_DO_SETUP()			gpio_configure_pin(PIN_FPGA_DO_GPIO, PIN_FPGA_DO_FLAGS)
+#define PIN_FPGA_DO_FLAGS       (PIO_TYPE_PIO_OUTPUT_0 | PIO_DEFAULT)
+#define FPGA_DO_LOW()           gpio_set_pin_low(PIN_FPGA_DO_GPIO)
+#define FPGA_DO_HIGH()          gpio_set_pin_high(PIN_FPGA_DO_GPIO)
+#define FPGA_DO_SETUP()         gpio_configure_pin(PIN_FPGA_DO_GPIO, PIN_FPGA_DO_FLAGS)
 
 #ifndef FPGA_USE_BITBANG
-#define FPGA_USE_BITBANG 0
+    #define FPGA_USE_BITBANG 0
 #endif
 
 #if FPGA_USE_BITBANG
-#error "Bit-Bang mode might be broken currently"
+    #error "Bit-Bang mode might be broken currently"
 #endif
 
 #ifndef FPGA_USE_USART
-#define FPGA_USE_USART 0
+    #define FPGA_USE_USART 0
 #endif
 
 #define BUTTON_IN PIO_PA24_IDX
@@ -89,21 +89,21 @@ extern uint8_t USB_PWR_STATE;
  *
  * \param databyte Byte to send, LSB is shifted out first
  */
-void fpga_program_sendbyte(uint8_t databyte);
+void fpga_program_sendbyte( uint8_t databyte );
 
 /**
  * \brief Setup the 'NPROG' pin
  */
-void fpga_program_init(void);
+void fpga_program_init( void );
 
 /**
  * \brief Setup peripherals, erase FPGA, must be followed by call to _setup2()
  */
-void fpga_program_setup1(void);
+void fpga_program_setup1( void );
 
 /**
  * \brief Set NPROG to idle state in preperation for programming to commence
  */
-void fpga_program_setup2(void);
+void fpga_program_setup2( void );
 
 #endif

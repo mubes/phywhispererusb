@@ -21,10 +21,10 @@
 #include <stdint.h>
 
 typedef enum fpga_lockstatus_e {fpga_unlocked = 0, fpga_generic, fpga_blockin, fpga_blockout, fpga_ctrlmem} fpga_lockstatus_t;
-void FPGA_setlock(fpga_lockstatus_t lockstatus);
-fpga_lockstatus_t FPGA_lockstatus(void);
+void FPGA_setlock( fpga_lockstatus_t lockstatus );
+fpga_lockstatus_t FPGA_lockstatus( void );
 
-void FPGA_setaddr(uint32_t addr);
+void FPGA_setaddr( uint32_t addr );
 
 /* Access pointer for FPGA Interface */
 #define PSRAM_BASE_ADDRESS         (0x60000000)

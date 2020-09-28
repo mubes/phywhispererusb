@@ -23,7 +23,7 @@
 /* ====================================================================================== */
 
 /* FPGA Programming: Init pins, set to standby state */
-void fpga_program_init(void)
+void fpga_program_init( void )
 {
     FPGA_NPROG_SETUP();
     FPGA_NPROG_HIGH();
@@ -31,7 +31,7 @@ void fpga_program_init(void)
 /* ====================================================================================== */
 
 /* FPGA Programming Step 1: Erase FPGA, setup SPI interface */
-void fpga_program_setup1(void)
+void fpga_program_setup1( void )
 {
     /* Init - set program low to erase FPGA */
     FPGA_NPROG_LOW();
@@ -42,20 +42,20 @@ void fpga_program_setup1(void)
     spiopts.channel_mode = US_MR_CHMODE_NORMAL;
     spiopts.spi_mode = SPI_MODE_0;
 
-    sysclk_enable_peripheral_clock(FPGA_PROG_USART_ID);
-    usart_init_spi_master(FPGA_PROG_USART, &spiopts, sysclk_get_cpu_hz());
+    sysclk_enable_peripheral_clock( FPGA_PROG_USART_ID );
+    usart_init_spi_master( FPGA_PROG_USART, &spiopts, sysclk_get_cpu_hz() );
     FPGA_DO_SETUP();
     FPGA_CCLK_SETUP();
 
     //pin setup doesn't transfer control over to USART, so have to do it manually
-    PIOA->PIO_PDR = (1 << PIN_FPGA_DO_GPIO) | (1 << PIN_FPGA_CCLK_GPIO);
-    usart_enable_tx(FPGA_PROG_USART);
+    PIOA->PIO_PDR = ( 1 << PIN_FPGA_DO_GPIO ) | ( 1 << PIN_FPGA_CCLK_GPIO );
+    usart_enable_tx( FPGA_PROG_USART );
 }
 
 /* ====================================================================================== */
 
 /* FPGA Programming Step 2: Prepare FPGA for receiving programming data */
-void fpga_program_setup2(void)
+void fpga_program_setup2( void )
 {
     FPGA_NPROG_HIGH();
 }
@@ -66,11 +66,11 @@ void fpga_program_setup2(void)
 //uint32_t fpga_total_bs_len;
 
 /* FPGA Programming Step 3: Send data until done */
-void fpga_program_sendbyte(uint8_t databyte)
+void fpga_program_sendbyte( uint8_t databyte )
 {
     //For debug only
     //fpga_total_bs_len++;
-    usart_putchar(FPGA_PROG_USART, databyte);
+    usart_putchar( FPGA_PROG_USART, databyte );
 }
 
 /* ====================================================================================== */
