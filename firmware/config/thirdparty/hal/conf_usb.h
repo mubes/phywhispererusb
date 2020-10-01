@@ -22,7 +22,7 @@
 extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 #define  USB_DEVICE_MANUFACTURE_NAME      "NewAE Technology Inc."
-#define  USB_DEVICE_PRODUCT_NAME          "PhyWhisperer-UDT"
+#define  USB_DEVICE_PRODUCT_NAME          "PhyWhisperer-UDT (CMSIS-DAP)"
 #define  USB_DEVICE_GET_SERIAL_NAME_POINTER g_usb_serial_number
 #define  USB_DEVICE_GET_SERIAL_NAME_LENGTH 32
 
@@ -63,8 +63,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 // If CDC and Vendor endpoints all uses 2 banks, DPRAM is not enough: 4 bulk
 // endpoints requires 4K bytes. So reduce the number of banks of CDC bulk
 // endpoints to use less DPRAM. Keep Vendor setting to keep performance.
-#     define  UDD_BULK_NB_BANK(ep) 1
-
+#define  UDD_BULK_NB_BANK(ep) 1
 //((ep == 5 || ep== 6) ? 1 : 2)
 //@}
 
@@ -168,9 +167,9 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define  UDI_HID_GENERIC_SET_FEATURE(report) usb_hid_generic_set_feature(report)
 
 //! Sizes of I/O reports
-#define  UDI_HID_REPORT_IN_SIZE             8
-#define  UDI_HID_REPORT_OUT_SIZE            8
-#define  UDI_HID_REPORT_FEATURE_SIZE        4
+#define  UDI_HID_REPORT_IN_SIZE             64
+#define  UDI_HID_REPORT_OUT_SIZE            64
+#define  UDI_HID_REPORT_FEATURE_SIZE        1
 
 //! Sizes of I/O endpoints
 #define  UDI_HID_GENERIC_EP_SIZE            8

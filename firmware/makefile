@@ -21,6 +21,9 @@ THIRDPARTY=thirdparty
 # Path to hal files (standard multi-project files that don't change per app)
 HALPATH=$(THIRDPARTY)/hal
 
+# Path to CMSIS-DAP files
+CMSISDAPPATH=$(THIRDPARTY)/cmsis-dap
+
 # Path to libraries (files that are shared across multiple projects)
 LIBRARYPATH=libs
 
@@ -81,6 +84,7 @@ include $(SOURCEPATH)/Makefile.inc
 include $(SUPPORTPATH)/Makefile.libs
 
 # Other files indicating what is to be built
+include $(SUPPORTPATH)/Makefile.thirdparty.cmsis-dap
 include $(SUPPORTPATH)/Makefile.thirdparty.hal.sam3u
 
 # ...and finally the build rules & compiler options

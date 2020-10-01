@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include "usb_main_handler.h"
 
+#define REPORT_LEVEL 4
 #include "generics.h"
 
 /* ====================================================================================== */
@@ -31,7 +32,7 @@ bool usb_main_extra_string( void )
     static uint8_t udi_cdc_name[] = "Serial";
     static uint8_t udi_comm_name[] = "CDC-COMM";
     static uint8_t udi_data_name[] = "CDC-DATA";
-    static uint8_t udi_vendor_name[] = "Phywhisperer-USB";
+    static uint8_t udi_vendor_name[] = "Phywhisperer-USB CMSIS-DAP";
     static uint8_t udi_hid_generic[] = "CMSIS-DAP";
 
     struct extra_strings_desc_t
@@ -51,37 +52,37 @@ bool usb_main_extra_string( void )
     // Link payload pointer to the string corresponding at request
     switch ( udd_g_ctrlreq.req.wValue & 0xff )
     {
-        case UDI_CDC_IAD_STRING_ID:
+        case UDI_CDC_IAD_STRING_ID: /* -------------------------------------------- */
             DBG( "Request UDI_CDC_IAD_STRING_ID" EOL );
             str_lgt = sizeof( udi_cdc_name ) - 1;
             str = udi_cdc_name;
             break;
 
-        case UDI_CDC_COMM_STRING_ID_0:
+        case UDI_CDC_COMM_STRING_ID_0: /* ----------------------------------------- */
             DBG( "Request UDI_CDC_COMM_STRING_ID_0" EOL );
             str_lgt = sizeof( udi_comm_name ) - 1;
             str = udi_comm_name;
             break;
 
-        case UDI_CDC_DATA_STRING_ID_0:
+        case UDI_CDC_DATA_STRING_ID_0: /* ----------------------------------------- */
             DBG( "Request UDI_CDC_DATA_STRING_ID_0" EOL );
             str_lgt = sizeof( udi_data_name ) - 1;
             str = udi_data_name;
             break;
 
-        case UDI_VENDOR_STRING_ID:
+        case UDI_VENDOR_STRING_ID: /* --------------------------------------------- */
             DBG( "Request UDI_VENDOR_STRING_ID" EOL );
             str_lgt = sizeof( udi_vendor_name ) - 1;
             str = udi_vendor_name;
             break;
 
-        case UDI_HID_GENERIC_STRING_ID:
+        case UDI_HID_GENERIC_STRING_ID: /* ---------------------------------------- */
             DBG( "Request for UDI_HID_GENERIC_STRING_ID" EOL );
             str_lgt = sizeof( udi_hid_generic ) - 1;
             str = udi_hid_generic;
             break;
 
-        default:
+        default: /* --------------------------------------------------------------- */
             DBG( "Request for unknown element %d" EOL, udd_g_ctrlreq.req.wValue & 0xff );
             return false;
     }

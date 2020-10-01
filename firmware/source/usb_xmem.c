@@ -121,7 +121,8 @@ uint32_t safe_readuint32( uint16_t fpgaaddr )
     return data;
 }
 /* ====================================================================================== */
-// Read numBytes bytes from memory
+/* Read numBytes bytes from memory */
+
 void unsafe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 {
     FPGA_setaddr( fpgaaddr );
@@ -132,8 +133,10 @@ void unsafe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
     }
 }
 /* ====================================================================================== */
-// Safely read bytes from memory by disabling interrupts first
-// Blocks until able to read
+/* Safely read bytes from memory by disabling interrupts first
+ * Blocks until able to read.
+ */
+
 void safe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 {
     //TODO - This timeout to make GUI responsive in case of USB errors, but data will be invalid
@@ -161,7 +164,8 @@ void safe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
     exit_cs();
 }
 /* ====================================================================================== */
-// Write 4 bytes to memory
+/* Write 4 bytes to memory */
+
 void unsafe_writebytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 {
     FPGA_setaddr( fpgaaddr );
@@ -173,7 +177,8 @@ void unsafe_writebytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 }
 
 /* ====================================================================================== */
-//Set timing for normal mode
+/* Set timing for normal mode */
+
 void smc_normaltiming( void )
 
 {
@@ -203,6 +208,8 @@ void smc_normaltiming( void )
                 );
 }
 /* ====================================================================================== */
+/* Set timing for fast mode */
+
 void smc_fasttiming( void )
 
 {

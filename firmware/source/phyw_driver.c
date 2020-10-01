@@ -21,23 +21,18 @@ static bool _powerOn;
 /* ====================================================================================== */
 /* ====================================================================================== */
 /* ====================================================================================== */
-
 enum phyw_driver_pwr phyw_driver_get_pwr_source( void )
 
 {
     return _powerSource;
 }
-
 /* ====================================================================================== */
-
 bool phyw_driver_get_pwr_on( void )
 
 {
     return _powerOn;
 }
-
 /* ====================================================================================== */
-
 void phyw_driver_set_pwr_source( enum phyw_driver_pwr e )
 
 {
@@ -55,9 +50,7 @@ void phyw_driver_set_pwr_source( enum phyw_driver_pwr e )
         }
     }
 }
-
 /* ====================================================================================== */
-
 void phyw_driver_set_pwr_on( bool isOn )
 
 {
@@ -89,26 +82,20 @@ void phyw_driver_set_pwr_on( bool isOn )
             break;
     }
 }
-
 /* ====================================================================================== */
-
 bool phyw_driver_pwr_toggle( void )
 
 {
     phyw_driver_set_pwr_on( !_powerOn );
     return ( _powerOn );
 }
-
 /* ====================================================================================== */
-
 bool phyw_driver_button_down( void )
 
 {
     return ( !( PIOA->PIO_PDSR & ( 1 << BUTTON_IN ) ) );
 }
-
 /* ====================================================================================== */
-
 bool phyw_driver_button_pressed( void )
 
 {
@@ -165,9 +152,7 @@ bool phyw_driver_button_pressed( void )
 
     return false;
 }
-
 /* ====================================================================================== */
-
 void phyw_driver_setup_pins( void )
 {
     board_init();
@@ -228,5 +213,4 @@ void phyw_driver_setup_pins( void )
     smc_set_mode( SMC, 0, SMC_MODE_READ_MODE | SMC_MODE_WRITE_MODE
                   | SMC_MODE_DBW_BIT_8 );
 }
-
 /* ====================================================================================== */

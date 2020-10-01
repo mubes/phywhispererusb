@@ -2,9 +2,11 @@
 #include <stdbool.h>
 #include "conf_usb.h"
 #include "usb_hid_generic_handler.h"
+
+#define REPORT_LEVEL 4
 #include "generics.h"
 
-static bool _enable;     // Indicator of if HID GENERIC is currently running
+static bool _enabled;     // Indicator of if HID GENERIC is currently running
 
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -15,7 +17,7 @@ static bool _enable;     // Indicator of if HID GENERIC is currently running
 /* ====================================================================================== */
 bool usb_hid_generic_enable( void )
 {
-    _enable = true;
+    _enabled = true;
     DBG( "Generic enable" EOL );
     return true;
 }
@@ -23,7 +25,7 @@ bool usb_hid_generic_enable( void )
 void usb_hid_generic_disable( void )
 {
     DBG( "Generic disable" EOL );
-    _enable = false;
+    _enabled = false;
 }
 /* ====================================================================================== */
 void usb_hid_generic_set_feature( uint8_t *r )
