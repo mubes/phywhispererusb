@@ -42,6 +42,10 @@
 #include "udi_hid_generic.h"
 #include <string.h>
 
+/* MODIFICATION: Add reporting level and debug throughout the file */
+#define REPORT_LEVEL 4
+#include "generics.h"
+
 /**
  * \ingroup udi_hid_generic_group
  * \defgroup udi_hid_generic_group_udc Interface with USB Device Core (UDC)
@@ -56,6 +60,7 @@ bool udi_hid_generic_setup(void);
 uint8_t udi_hid_generic_getsetting(void);
 
 //! Global structure which contains standard UDI interface for UDC
+COMPILER_WORD_ALIGNED
 UDC_DESC_STORAGE udi_api_t udi_api_hid_generic = {
 	.enable = (bool(*)(void))udi_hid_generic_enable,
 	.disable = (void (*)(void))udi_hid_generic_disable,
@@ -99,40 +104,10 @@ COMPILER_WORD_ALIGNED
 
 //@}
 
-//! HID report descriptor for standard HID generic
-UDC_DESC_STORAGE udi_hid_generic_report_desc_t udi_hid_generic_report_desc = { {
-				0x06, 0xFF, 0xFF,	// 04|2   , Usage Page (vendor defined?)
-				0x09, 0x01,	// 08|1   , Usage      (vendor defined
-				0xA1, 0x01,	// A0|1   , Collection (Application)
-				// IN report
-				0x09, 0x02,	// 08|1   , Usage      (vendor defined)
-				0x09, 0x03,	// 08|1   , Usage      (vendor defined)
-				0x15, 0x00,	// 14|1   , Logical Minimum(0 for signed byte?)
-				0x26, 0xFF, 0x00,	// 24|1   , Logical Maximum(255 for signed byte?)
-				0x75, 0x08,	// 74|1   , Report Size(8) = field size in bits = 1 byte
-				// 94|1   , ReportCount(size) = repeat count of previous item
-				0x95, sizeof(udi_hid_generic_report_in),
-				0x81, 0x02,	// 80|1   , IN report (Data,Variable, Absolute)
-				// OUT report
-				0x09, 0x04,	// 08|1   , Usage      (vendor defined)
-				0x09, 0x05,	// 08|1   , Usage      (vendor defined)
-				0x15, 0x00,	// 14|1   , Logical Minimum(0 for signed byte?)
-				0x26, 0xFF, 0x00,	// 24|1   , Logical Maximum(255 for signed byte?)
-				0x75, 0x08,	// 74|1   , Report Size(8) = field size in bits = 1 byte
-				// 94|1   , ReportCount(size) = repeat count of previous item
-				0x95, sizeof(udi_hid_generic_report_out),
-				0x91, 0x02,	// 90|1   , OUT report (Data,Variable, Absolute)
-				// Feature report
-				0x09, 0x06,	// 08|1   , Usage      (vendor defined)
-				0x09, 0x07,	// 08|1   , Usage      (vendor defined)
-				0x15, 0x00,	// 14|1   , LogicalMinimum(0 for signed byte)
-				0x26, 0xFF, 0x00,	// 24|1   , Logical Maximum(255 for signed byte)
-				0x75, 0x08,	// 74|1   , Report Size(8) =field size in bits = 1 byte
-				0x95, sizeof(udi_hid_generic_report_feature),	// 94|x   , ReportCount in byte
-				0xB1, 0x02,	// B0|1   , Feature report
-				0xC0	// C0|0   , End Collection
-		}
-};
+// MODIFICATION: Change REPORT Descriptor to support CMSIS-DAP */
+//! HID report descriptor for CMSIS-DAP
+COMPILER_WORD_ALIGNED
+UDC_DESC_STORAGE udi_hid_generic_report_desc_t udi_hid_cmsis_dap_report_desc = { HID_REPORT_DESCRIPTOR };
 
 /**
  * \name Internal routines
@@ -161,6 +136,13 @@ static void udi_hid_generic_report_out_received(udd_ep_status_t status,
 		iram_size_t nb_received, udd_ep_id_t ep);
 
 /**
+ * \brief Callback when the report is received over EP0
+ * MODIFICATION: Added to support EP0 signalling
+ *
+ */
+static void udi_hid_generic_ep0_report_out_received(void);
+
+/**
  * \brief Enable reception of out report
  *
  * \return \c 1 if function was successfully done, otherwise \c 0.
@@ -178,7 +160,6 @@ static void udi_hid_generic_report_in_sent(udd_ep_status_t status,
 		iram_size_t nb_sent, udd_ep_id_t ep);
 
 //@}
-
 
 //--------------------------------------------
 //------ Interface for UDI HID level
@@ -205,7 +186,7 @@ bool udi_hid_generic_setup(void)
 {
 	return udi_hid_setup(&udi_hid_generic_rate,
 								&udi_hid_generic_protocol,
-								(uint8_t *) &udi_hid_generic_report_desc,
+								(uint8_t *) &udi_hid_cmsis_dap_report_desc,
 								udi_hid_generic_setreport);
 }
 
@@ -230,6 +211,20 @@ static bool udi_hid_generic_setreport(void)
 				sizeof(udi_hid_generic_report_feature);
 		return true;
 	}
+
+	/* MODIFICATION: Allow OUT messaging on EP0 */
+	if ((USB_HID_REPORT_TYPE_OUTPUT == (udd_g_ctrlreq.req.wValue >> 8))
+			&& (0 == (0xFF & udd_g_ctrlreq.req.wValue))
+			&& (sizeof(udi_hid_generic_report_out) ==
+					udd_g_ctrlreq.req.wLength)) {
+		// Output report on report ID 0
+		udd_g_ctrlreq.payload =
+				(uint8_t *) & udi_hid_generic_report_out;
+		udd_g_ctrlreq.callback = udi_hid_generic_ep0_report_out_received;
+		udd_g_ctrlreq.payload_size =
+				sizeof(udi_hid_generic_report_out);
+		return true;
+	}
 	return false;
 }
 
@@ -239,7 +234,10 @@ static bool udi_hid_generic_setreport(void)
 bool udi_hid_generic_send_report_in(uint8_t *data)
 {
 	if (!udi_hid_generic_b_report_in_free)
+	{
+		WARN("HID EP Not free" EOL);
 		return false;
+	}
 	irqflags_t flags = cpu_irq_save();
 	// Fill report
 	memset(&udi_hid_generic_report_in, 0,
@@ -280,6 +278,12 @@ static void udi_hid_generic_report_out_received(udd_ep_status_t status,
 	udi_hid_generic_report_out_enable();
 }
 
+/* MODIFICATION: Report reception complete on EP0 */
+static void udi_hid_generic_ep0_report_out_received(void)
+
+{
+	UDI_HID_GENERIC_REPORT_OUT(udi_hid_generic_report_out);
+}
 
 static bool udi_hid_generic_report_out_enable(void)
 {

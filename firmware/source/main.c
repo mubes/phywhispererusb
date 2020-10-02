@@ -3,6 +3,8 @@
 #include "fpga_program.h"
 #include "phyw_driver.h"
 #include "systick.h"
+#include "DAP_config.h"
+#include "DAP.h"
 
 #define REPORT_LEVEL 4
 #include "generics.h"
@@ -65,6 +67,10 @@ int main(void)
     /* Stop the USB unterface (needed for debug restarts without power cycle) */
     udc_stop();
     _delay_ms(200);
+
+    /* Initialize the DAP */
+    DAP_Setup();
+
 
     udc_start();
     gpio_set_pin_high(LED0_GPIO);

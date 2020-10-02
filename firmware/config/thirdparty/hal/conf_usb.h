@@ -158,6 +158,8 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 /**
  * Configuration of HID Generic interface
+ * Note that udi_hid_generic.c has been modified to support this configuration.
+ * Specifically, OUT in EP0 has been set up, and REPORT descriptor abstracted to the config.
  * @{
  */
 //! Interface callback definition
@@ -172,7 +174,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define  UDI_HID_REPORT_FEATURE_SIZE        1
 
 //! Sizes of I/O endpoints
-#define  UDI_HID_GENERIC_EP_SIZE            8
+#define  UDI_HID_GENERIC_EP_SIZE            64
 
 #define UDI_HID_GENERIC_STRING_ID           8
 
@@ -180,6 +182,29 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define UDI_HID_GENERIC_EP_OUT              0
 
 #define UDI_HID_GENERIC_IFACE_NUMBER        3
+
+#define HID_REPORT_DESCRIPTOR { \
+        0x06, 0x00, 0xFF,	/* Usage Page (vendor defined) */             \
+	0x09, 0x01,	        /* Usage      (vendor defined) */             \
+                                                                              \
+	0xA1, 0x01,	        /* Collection (Application)    */             \
+        0x15, 0x00,             /* Value Logical Min 0         */             \
+        0x26, 0xFF, 0x00,       /* Value Logical Max 0xFF      */             \
+        0x75, 0x08,             /* Report Size 8 bits          */             \
+        0x95, UDI_HID_REPORT_IN_SIZE, /* Inreport Count Max Size */           \
+                                                                              \
+        0x09, 0x01,             /* Usage      (vendor defined) */             \
+        0x81, 2,                /* HID Input (Data, Variable, Absolute) */    \
+        0x95, UDI_HID_REPORT_OUT_SIZE,        /* Outreport Count Max Size */  \
+                                                                              \
+        0x09, 0x01,             /* Usage      (vendor defined) */             \
+        0x91, 2,                /* HID Output (Data, Variable, Absolute) */   \
+        0x95, UDI_HID_REPORT_FEATURE_SIZE,    /* Featreport Count Max Size */ \
+                                                                              \
+        0x09, 0x01,             /* Usage      (vendor defined) */             \
+        0xB1, 2,                /* HID Feature (Data, Variable, Absolute) */  \
+	0xC0	                /* End Collection */                          \
+        }
 //@}
 
 //@}

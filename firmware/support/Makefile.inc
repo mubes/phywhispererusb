@@ -97,7 +97,6 @@ CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -fshort-enums
-CFLAGS += -fdata-sections
 CFLAGS += -ffunction-sections
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
@@ -110,7 +109,7 @@ CFLAGS += -Wcomment
 CFLAGS += -Wundef
 CFLAGS += -Wunreachable-code
 CFLAGS += -Wsign-compare
-CFLAGS += -Wa,-adhlns=$(addprefix $(OBJDIR)/,$(notdir $(<:%.c=%.lst)))
+CFLAGS += -Wa,-adhlns=$(addprefix $(OBJDIR)/,$(<:%.c=%.lst))
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 

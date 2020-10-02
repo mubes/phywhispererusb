@@ -64,6 +64,7 @@ extern UDC_DESC_STORAGE udi_api_t udi_api_hid_generic;
  */
 //@{
 
+/* MODIFICATION: Only accomodate OUT endpoint if it's defined */
 //! Interface descriptor structure for HID generic
 typedef struct {
 	usb_iface_desc_t iface;
@@ -74,9 +75,10 @@ typedef struct {
 #endif
 } udi_hid_generic_desc_t;
 
+/* MODIFICATION: Adjust length to actual size of REPORT descriptor (YUK) */
 //! Report descriptor for HID generic
 typedef struct {
-	uint8_t array[33];
+  uint8_t array[sizeof((uint8_t[])HID_REPORT_DESCRIPTOR)];
 } udi_hid_generic_report_desc_t;
 
 
@@ -86,8 +88,11 @@ typedef struct {
 #endif
 
 
+/* MODIFICATION: Make single endpoint with OUT on EP0 */
 
 //! Content of HID generic interface descriptor for all speed
+
+#if UDI_HID_GENERIC_EP_OUT == 0
 #define UDI_HID_GENERIC_DESC    {\
    .iface.bLength             = sizeof(usb_iface_desc_t),\
    .iface.bDescriptorType     = USB_DT_INTERFACE,\
@@ -112,9 +117,8 @@ typedef struct {
    .ep_in.wMaxPacketSize      = LE16(UDI_HID_GENERIC_EP_SIZE),\
    .ep_in.bInterval           = 4,\
    }
-
-
-#define ZZUDI_HID_GENERIC_DESC    {\
+#else
+#define UDI_HID_GENERIC_DESC    {\
    .iface.bLength             = sizeof(usb_iface_desc_t),\
    .iface.bDescriptorType     = USB_DT_INTERFACE,\
    .iface.bInterfaceNumber    = UDI_HID_GENERIC_IFACE_NUMBER,\
@@ -144,6 +148,7 @@ typedef struct {
    .ep_out.wMaxPacketSize     = LE16(UDI_HID_GENERIC_EP_SIZE),\
    .ep_out.bInterval          = 4,\
    }
+#endif
 //@}
 
 

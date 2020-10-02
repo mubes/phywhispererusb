@@ -1,8 +1,5 @@
-VPATH += :$(HALPATH)/$(PLATFORM)
-
-SRC += $(subst $(HALPATH)/$(PLATFORM)/,,$(wildcard $(HALPATH)/$(PLATFORM)/*.c))
+SRC += $(wildcard $(CONFIG)/$(HALPATH)/*.c)
+SRC += $(wildcard $(HALPATH)/$(PLATFORM)/*.c)
 EXTRAINCDIRS += $(CONFIG)/$(HALPATH)
 EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc
-EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc/sam
-EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc/sam_twi
 
