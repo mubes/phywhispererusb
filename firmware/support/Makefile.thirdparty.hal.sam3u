@@ -1,4 +1,3 @@
-SRC += $(wildcard $(CONFIG)/$(HALPATH)/*.c)
 SRC += $(wildcard $(HALPATH)/$(PLATFORM)/*.c)
 EXTRAINCDIRS += $(CONFIG)/$(HALPATH)
 EXTRAINCDIRS += $(HALPATH)/$(PLATFORM)/inc

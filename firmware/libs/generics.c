@@ -15,7 +15,7 @@ static char _scratchpad[MAX_STRLEN];
 /* ======================================================================================= */
 /* ======================================================================================= */
 /* ======================================================================================= */
-static __INLINE uint32_t _SendChar ( uint32_t c, uint32_t ch )
+static __INLINE uint32_t _SendCharn ( uint8_t c, uint32_t n, uint32_t *ch )
 {
     if ( ( CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk ) && /* Trace enabled */
             ( ITM->TCR & ITM_TCR_ITMENA_Msk ) && /* ITM enabled */
@@ -24,10 +24,33 @@ static __INLINE uint32_t _SendChar ( uint32_t c, uint32_t ch )
     {
         while ( ITM->PORT[c].u32 == 0 ); // Port available?
 
-        ITM->PORT[c].u8 = ( uint8_t ) ch; // Write data
+        switch ( n )
+        {
+            case 0:
+                assert( false );
+                n = 0;
+                break;
+
+            case 1:
+                ITM->PORT[c].u8 = *ch;
+                n = 1;
+                break;
+
+            case 2:
+            case 3:
+                ITM->PORT[c].u16 = *ch;
+                n = 2;
+                break;
+
+            default:
+            case 4:
+                ITM->PORT[c].u32 = *ch;
+                n = 4;
+                break;
+        }
     }
 
-    return ( ch );
+    return ( n );
 }
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -45,12 +68,14 @@ void genericsReport( const char *fmt, ... )
 
     va_list va;
     va_start( va, fmt );
-    vsnprintf( _scratchpad, MAX_STRLEN, fmt, va );
+    uint32_t l = vsnprintf( _scratchpad, MAX_STRLEN, fmt, va );
     va_end( va );
 
-    while ( *s )
+    while ( l )
     {
-        _SendChar( 0, *s++ );
+        uint8_t d = _SendCharn( 0, l, ( uint32_t * )s );
+        l -= d;
+        s += d;
     }
 }
 /* ====================================================================================== */

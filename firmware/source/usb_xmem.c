@@ -22,6 +22,8 @@
 uint8_t volatile *xram = ( uint8_t * ) PSRAM_BASE_ADDRESS;
 
 static volatile fpga_lockstatus_t _fpga_locked = fpga_unlocked;
+
+#define FPGA_ACCESS_GUARD_COUNT (10000)
 /* ====================================================================================== */
 int FPGA_setlock( fpga_lockstatus_t lockstatus )
 {
@@ -97,7 +99,7 @@ uint32_t unsafe_readuint32( uint16_t fpgaaddr )
 uint32_t safe_readuint32( uint16_t fpgaaddr )
 {
     //TODO - This timeout to make GUI responsive in case of USB errors, but data will be invalid
-    uint32_t timeout = 10000;
+    uint32_t timeout = FPGA_ACCESS_GUARD_COUNT;
 
     do
     {
@@ -120,6 +122,32 @@ uint32_t safe_readuint32( uint16_t fpgaaddr )
     exit_cs();
     return data;
 }
+
+uint32_t fpgastore = 0;
+
+/* ====================================================================================== */
+uint8_t unsafe_readuint8( uint16_t fpgaaddr )
+{
+    if ( fpgaaddr != fpgastore )
+    {
+        FPGA_setaddr( fpgaaddr );
+        fpgastore = fpgaaddr;
+    }
+
+    return *xram;
+}
+/* ====================================================================================== */
+bool unsafe_writeuint8( uint16_t fpgaaddr, uint8_t data )
+{
+    if ( fpgaaddr != fpgastore )
+    {
+        FPGA_setaddr( fpgaaddr );
+        fpgastore = fpgaaddr;
+    }
+
+    *xram = data;
+    return true;
+}
 /* ====================================================================================== */
 /* Read numBytes bytes from memory */
 
@@ -140,7 +168,7 @@ void unsafe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 void safe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes )
 {
     //TODO - This timeout to make GUI responsive in case of USB errors, but data will be invalid
-    uint32_t timeout = 10000;
+    uint32_t timeout = FPGA_ACCESS_GUARD_COUNT;
 
     do
     {

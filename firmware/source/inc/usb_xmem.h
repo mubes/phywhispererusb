@@ -53,6 +53,10 @@ void safe_readbytes( uint16_t fpgaaddr, uint8_t *data, int numBytes );
 // Write a number of bytes to the FPGA
 void unsafe_writebytes( uint16_t fpgaaddr, uint8_t *data, int numBytes );
 
+// Read/Write 8 bit value from/to FPGA
+uint8_t unsafe_readuint8( uint16_t fpgaaddr );
+bool unsafe_writeuint8( uint16_t fpgaaddr, uint8_t data );
+
 void FPGA_setaddr( uint32_t addr );
 
 void smc_fasttiming( void );

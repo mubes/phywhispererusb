@@ -115,7 +115,7 @@ typedef struct {
    .ep_in.bEndpointAddress    = UDI_HID_GENERIC_EP_IN,\
    .ep_in.bmAttributes        = USB_EP_TYPE_INTERRUPT,\
    .ep_in.wMaxPacketSize      = LE16(UDI_HID_GENERIC_EP_SIZE),\
-   .ep_in.bInterval           = 4,\
+   .ep_in.bInterval           = 1,\
    }
 #else
 #define UDI_HID_GENERIC_DESC    {\

@@ -43,6 +43,10 @@
         "launch": {
                 "configurations": [
 
+
+
+
+
                         {
                                 "name": "BMP Download/SWO",
                                 "cwd": "${workspaceRoot}",
@@ -113,12 +117,12 @@
                                         "dwtSyncTap 3",
                                         "dwtPostTap 1",
                                         "dwtPostInit 1",
-                                        "dwtPostReset 10",
+                                        "dwtPostReset 15",
                                         "dwtCycEna 1",
                                         "dwtTraceException 1",
                                         "ITMId 1",
                                         "ITMGTSFreq 1",
-                                        "ITMTSPrescale 1",
+                                        "ITMTSPrescale 3",
                                         "ITMTSEna 1",
                                         "ITMTXEna 1",
                                         "ITMSYNCEna 1",

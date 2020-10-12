@@ -97,6 +97,7 @@ CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -fshort-enums
+CFLAGS += -fdata-sections
 CFLAGS += -ffunction-sections
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
