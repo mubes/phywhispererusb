@@ -19,10 +19,11 @@
 #include "usb_xmem.h"
 #include "fpga_program.h"
 #include "phyw_driver.h"
+#include "led_states.h"
 
 /* Firmware protocol version */
-#define FW_VER_MAJOR 0
-#define FW_VER_MINOR 10
+#define FW_VER_MAJOR 1
+#define FW_VER_MINOR 1
 #define FW_VER_DEBUG 0
 
 /* Protocol message types */
@@ -293,6 +294,9 @@ static void _ctrl_progfpga_bulk( void )
 
         case 0xA2: /* Done --------------------------------------------------- */
             blockendpoint_usage = bep_emem;
+
+            /* See if it programmed OK */
+            check_fpga();
             break;
 
         default: /* ---------------------------------------------------------- */

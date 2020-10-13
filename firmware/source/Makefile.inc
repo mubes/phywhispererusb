@@ -8,6 +8,7 @@ APPSRC += usb_main_handler.c
 APPSRC += usb_vendor_handler.c
 APPSRC += usb_cdc_handler.c
 APPSRC += usb_hid_generic_handler.c
+APPSRC += led_states.c
 
 # PHY Hardware drvier
 APPSRC += phyw_driver.c

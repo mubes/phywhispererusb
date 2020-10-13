@@ -34,12 +34,12 @@ Provides definitions about:
  - Optional information about a connected Target Device (for Evaluation Boards).
 */
 
-#define REPORT_LEVEL 4
 #include <stdint.h>
 #include <stdbool.h>
 #include <asf.h>
 #include "generics.h"
 #include "usb_xmem.h"
+#include "led_states.h"
 
 /* -------------------------------------------------------------------------------*/
 /* Patchups to deal with different defines that don't naturally exist in our code */
@@ -84,7 +84,7 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response);
 /// Default communication speed on the Debug Access Port for SWD and JTAG mode.
 /// Used to initialize the default SWD/JTAG clock frequency.
 /// The command \ref DAP_SWJ_Clock can be used to overwrite this default setting.
-#define DAP_DEFAULT_SWJ_CLOCK 200000 ///< Default SWD/JTAG clock frequency in Hz.
+#define DAP_DEFAULT_SWJ_CLOCK 2000000 ///< Default SWD/JTAG clock frequency in Hz.
 
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimized the communication performance with the
@@ -174,8 +174,8 @@ uint8_t dbg_io_dir;
 #define RST_BIT (3)
 
 /* Registers on the FPGA */
-#define USERIO_DATA (0x16)
-#define USERIO_PWRDRIVEN (0x17)
+#define USERIO_DATA (0x4b)
+#define USERIO_PWRDRIVEN (0x4c)
 
 // Configure DAP I/O pins ------------------------------
 
@@ -193,8 +193,6 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 __STATIC_INLINE void PORT_SWD_SETUP(void)
 {
-
-  DBG("PORT_SWD_SETUP" EOL);
   dbg_io_dir=((1<<SWDIO_BIT)|(1<<SWK_BIT)|(1<<RST_BIT));
   dbg_op_state = ((1 << SWK_BIT) | (1 << RST_BIT)| (1 << SWDIO_BIT));
   unsafe_writeuint8(USERIO_DATA, dbg_op_state);
@@ -207,7 +205,6 @@ Disables the DAP Hardware I/O pins which configures:
 */
 __STATIC_INLINE void PORT_OFF(void)
 {
-  DBG("PORT_TEARDOWN" EOL);
   dbg_op_state = 0;
   dbg_io_dir = 0;
   unsafe_writeuint8(USERIO_DATA, dbg_op_state);
@@ -229,8 +226,8 @@ Set the SWCLK/TCK DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
 {
-  dbg_op_state |= (1 << SWK_BIT);
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+      dbg_op_state |= (1 << SWK_BIT);
+      unsafe_writeuint8(USERIO_DATA, dbg_op_state);
 }
 
 /** SWCLK/TCK I/O pin: Set Output to Low.
@@ -416,6 +413,15 @@ It is recommended to provide the following LEDs for status indication:
 */
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
+ if (bit)
+ {
+   led_states_set(STATE_LED,STATE_LED_CONNECTED);
+ }
+ else
+ {
+   led_states_set(STATE_LED,STATE_LED_ON);
+ }
+ 
 }
 
 /** Debug Unit: Set status Target Running LED.
@@ -425,7 +431,16 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
-  ; // Not available
+  if (bit)
+  {
+    led_states_set(STATE_LED,STATE_LED_RUNNING);
+  }
+else  
+{
+    led_states_set(STATE_LED,STATE_LED_CONNECTED);
+}
+
+
 }
 
 ///@}

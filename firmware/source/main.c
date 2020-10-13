@@ -5,6 +5,7 @@
 #include "systick.h"
 #include "DAP_config.h"
 #include "DAP.h"
+#include "led_states.h"
 
 #define REPORT_LEVEL 4
 #include "generics.h"
@@ -55,6 +56,7 @@ int main( void )
     sysclk_init();
     systick_init();
     phyw_driver_setup_pins();
+    led_states_init();
 
     // Convert serial number to ASCII for USB Serial number
     snprintf( g_usb_serial_number, USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1, "%08lx%08lx%08lx%08lx",
@@ -72,10 +74,9 @@ int main( void )
     DAP_Setup();
 
     udc_start();
-    gpio_set_pin_high( LED0_GPIO );
-    gpio_set_pin_low( LED1_GPIO );
 
     phyw_driver_set_pwr_on( false );
+    check_fpga();
 
     /* Main application loop */
     while ( 1 )
@@ -86,6 +87,7 @@ int main( void )
         {
             phyw_driver_pwr_toggle();
         }
+        led_states_update();
     }
 }
 /* ====================================================================================== */

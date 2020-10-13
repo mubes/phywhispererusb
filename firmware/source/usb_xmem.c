@@ -17,6 +17,7 @@
 
 #include <asf.h>
 #include "usb_xmem.h"
+#include "led_states.h"
 
 /* Access pointer for FPGA Interface */
 uint8_t volatile *xram = ( uint8_t * ) PSRAM_BASE_ADDRESS;
@@ -73,7 +74,7 @@ void exit_cs( void )
 /* ====================================================================================== */
 void FPGA_setaddr( uint32_t addr )
 {
-    pio_sync_output_write( FPGA_ADDR_PORT, addr );
+    FPGA_ADDR_PORT->PIO_ODSR = (FPGA_ADDR_PORT->PIO_ODSR & 0x40) | (addr & 0x3F) | ((addr & 0xC0) << 1);
     gpio_set_pin_low( PIN_EBI_USB_SPARE1 );
     gpio_set_pin_high( PIN_EBI_USB_SPARE1 );
 }
@@ -267,3 +268,25 @@ void smc_fasttiming( void )
                 );
 }
 /* ====================================================================================== */
+bool check_fpga(void)
+
+#define FPGA_BUILD_TIME_REGISTER 0x4F
+
+{
+    uint8_t rxBuffer[4]={0xff};
+
+    /* Read FPGA build date */
+    safe_readbytes( FPGA_BUILD_TIME_REGISTER, rxBuffer, 4 );
+
+    if (rxBuffer[3]!=0xff)
+    {
+        led_states_set(ERROR_LED,ERROR_LED_OFF);
+    }
+    else
+    {
+        led_states_set(ERROR_LED,ERROR_LED_NOFPGA);
+    }
+    return (rxBuffer[3]!=0xff);
+}
+/* ====================================================================================== */
+
