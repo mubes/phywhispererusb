@@ -7,6 +7,7 @@
 #include "DAP.h"
 #include "led_states.h"
 
+#undef REPORT_LEVEL
 #define REPORT_LEVEL 4
 #include "generics.h"
 
