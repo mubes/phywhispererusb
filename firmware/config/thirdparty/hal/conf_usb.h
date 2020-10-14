@@ -52,11 +52,11 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Control endpoint size
 #define  USB_DEVICE_EP_CTRL_SIZE       64
 
-//! Four interfaces for this device (CDC COM + CDC DATA + Vendor + HID)
-#define  USB_DEVICE_NB_INTERFACE       4
+//! Two interfaces for this device (Vendor + HID)
+#define  USB_DEVICE_NB_INTERFACE       2
 
-//! 6 endpoints used by CDC, Vendor and HID interfaces (HID OUT in EP0)
-#  define  USB_DEVICE_MAX_EP           6
+//! 3 endpoints used by Vendor and HID interfaces (HID OUT in EP0)
+#  define  USB_DEVICE_MAX_EP           3
 
 // In HS mode, size of bulk endpoints are 512
 // If CDC and Vendor endpoints all uses 2 banks, DPRAM is not enough: 4 bulk
@@ -73,54 +73,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
  * USB Interface Configuration
  * @{
  */
-
-/**
- * Configuration of CDC interface
- * @{
- */
-
-//! Define two USB communication ports
-#define  UDI_CDC_PORT_NB 1
-
-//! Interface callback definition
-#define  UDI_CDC_ENABLE_EXT(port)         usb_cdc_enable(port)
-#define  UDI_CDC_DISABLE_EXT(port)        usb_cdc_disable(port)
-#define  UDI_CDC_RX_NOTIFY(port)          usb_cdc_uart_rx_notify(port)
-#define  UDI_CDC_TX_EMPTY_NOTIFY(port)    usb_cdc_uart_tx_notify(port)
-#define  UDI_CDC_SET_CODING_EXT(port,cfg) usb_cdc_uart_config(port,cfg)
-#define  UDI_CDC_SET_DTR_EXT(port,set)    usb_cdc_set_dtr(port,set)
-#define  UDI_CDC_SET_RTS_EXT(port,set)
-
-//! Define it when the transfer CDC Device to Host is a low rate (<512000 bauds)
-//! to reduce CDC buffers size
-//#define  UDI_CDC_LOW_RATE
-
-//! Default configuration of communication port
-#define  UDI_CDC_DEFAULT_RATE             115200
-#define  UDI_CDC_DEFAULT_STOPBITS         CDC_STOP_BITS_1
-#define  UDI_CDC_DEFAULT_PARITY           CDC_PAR_NONE
-#define  UDI_CDC_DEFAULT_DATABITS         8
-
-//! Enable id string of interface to add an extra USB string
-#define UDI_CDC_IAD_STRING_ID             4
-#define UDI_CDC_COMM_STRING_ID_0          5
-#define UDI_CDC_DATA_STRING_ID_0          6
-/**
- * USB CDC low level configuration
- * In standalone these configurations are defined by the CDC module.
- * For composite device, these configuration must be defined here
- * @{
- */
-//! Endpoint numbers definition
-#  define  UDI_CDC_COMM_EP_0             (3 | USB_EP_DIR_IN) // Notify endpoint
-#  define  UDI_CDC_DATA_EP_IN_0          (6 | USB_EP_DIR_IN) // TX
-#  define  UDI_CDC_DATA_EP_OUT_0         (5 | USB_EP_DIR_OUT)// RX
-
-//! Interface numbers
-#define  UDI_CDC_COMM_IFACE_NUMBER_0   1
-#define  UDI_CDC_DATA_IFACE_NUMBER_0   2
-//@}
-//@}
 
 /**
  * Configuration of vendor interface
@@ -144,7 +96,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define UDI_VENDOR_EPS_SIZE_ISO_HS    0
 
 // String to describe interface
-#define UDI_VENDOR_STRING_ID          7
+#define UDI_VENDOR_STRING_ID          4
 
 //! Endpoint numbers definition
 #define  UDI_VENDOR_EP_BULK_IN       (1 | USB_EP_DIR_IN)
@@ -175,12 +127,12 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Sizes of I/O endpoints
 #define  UDI_HID_GENERIC_EP_SIZE            64
 
-#define UDI_HID_GENERIC_STRING_ID           8
+#define UDI_HID_GENERIC_STRING_ID           5
 
-#define UDI_HID_GENERIC_EP_IN               ( 4 | USB_EP_DIR_IN )
+#define UDI_HID_GENERIC_EP_IN               ( 3 | USB_EP_DIR_IN )
 #define UDI_HID_GENERIC_EP_OUT              0
 
-#define UDI_HID_GENERIC_IFACE_NUMBER        3
+#define UDI_HID_GENERIC_IFACE_NUMBER        1
 
 #define HID_REPORT_DESCRIPTOR { \
         0x06, 0x00, 0xFF,	/* Usage Page (vendor defined) */             \
@@ -241,17 +193,11 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! USB Interfaces descriptor structure
 #define UDI_COMPOSITE_DESC_T \
         udi_vendor_desc_t      udi_vendor;      \
-        usb_iad_desc_t         udi_cdc_iad;     \
-        udi_cdc_comm_desc_t    udi_cdc_comm;    \
-        udi_cdc_data_desc_t    udi_cdc_data;    \
         udi_hid_generic_desc_t udi_hid_generic;        
 
 //! USB Interfaces descriptor value for Full Speed
 #define UDI_COMPOSITE_DESC_FS \
         .udi_vendor           = UDI_VENDOR_DESC_FS,     \
-        .udi_cdc_iad          = UDI_CDC_IAD_DESC_0,     \
-        .udi_cdc_comm         = UDI_CDC_COMM_DESC_0,    \
-        .udi_cdc_data         = UDI_CDC_DATA_DESC_0_FS, \
         .udi_hid_generic      = UDI_HID_GENERIC_DESC        
 
         
@@ -259,17 +205,12 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! USB Interfaces descriptor value for High Speed
 #define UDI_COMPOSITE_DESC_HS \
         .udi_vendor           = UDI_VENDOR_DESC_HS,     \
-        .udi_cdc_iad          = UDI_CDC_IAD_DESC_0,     \
-        .udi_cdc_comm         = UDI_CDC_COMM_DESC_0,    \
-        .udi_cdc_data         = UDI_CDC_DATA_DESC_0_HS, \
         .udi_hid_generic      = UDI_HID_GENERIC_DESC
         
 
 //! USB Interface APIs
 #define UDI_COMPOSITE_API \
         &udi_api_vendor,  \
-        &udi_api_cdc_comm, \
-        &udi_api_cdc_data, \
         &udi_api_hid_generic
         
 //@}
@@ -283,7 +224,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 //! The includes of classes and other headers must be done
 //! at the end of this file to avoid compile error
-#include "udi_cdc.h"
 #include "udi_vendor.h"
 #include "udi_hid_generic.h"
 #include "main.h"

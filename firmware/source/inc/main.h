@@ -46,7 +46,6 @@
 
 #include "usb_main_handler.h"
 #include "usb_vendor_handler.h"
-#include "usb_cdc_handler.h"
 #include "usb_hid_generic_handler.h"
 
 #endif // _MAIN_H_
