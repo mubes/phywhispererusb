@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include "usb_main_handler.h"
 
-#define REPORT_LEVEL 2
+#define REPORT_LEVEL 4
 #include "generics.h"
 
 /* ====================================================================================== */
@@ -31,11 +31,12 @@ bool usb_main_extra_string( void )
 {
     static uint8_t udi_vendor_name[] = "Phywhisperer-USB CMSIS-DAP";
     static uint8_t udi_hid_generic[] = "CMSIS-DAP";
+    static uint8_t udi_cmsisdapv2[] = "CMSIS-DAP v2";
 
     struct extra_strings_desc_t
     {
         usb_str_desc_t header;
-        le16_t string[20];
+        le16_t string[30];
     };
     static UDC_DESC_STORAGE struct extra_strings_desc_t extra_strings_desc =
     {
@@ -59,6 +60,12 @@ bool usb_main_extra_string( void )
             DBG( "Request for UDI_HID_GENERIC_STRING_ID" EOL );
             str_lgt = sizeof( udi_hid_generic ) - 1;
             str = udi_hid_generic;
+            break;
+
+        case UDI_CMSISDAP_STRING_ID: /* -------------------------------------------- */
+            DBG( "Request UDI_CMSISDAP_STRING_ID" EOL );
+            str_lgt = sizeof( udi_cmsisdapv2 ) - 1;
+            str = udi_cmsisdapv2;
             break;
 
         default: /* --------------------------------------------------------------- */

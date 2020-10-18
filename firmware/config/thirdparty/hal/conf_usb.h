@@ -3,6 +3,16 @@
 
 #include "compiler.h"
 
+/* Endpoint allocations;
+ *
+ * 1 512    CMSIS-DAPv2 IN1 (Debug)
+ * 2 512    CMSIS-DAPv2 OUT (Debug)
+ * 3 64     CMSIS-DAPv1 IN
+ * 4 64     CMSIS-DAPv2 IN2 (SWO)  TO BE CHANGED WITH (5)
+ * 5 1024   VENDOR-OUT             TO BE CHANGED WITH (4)
+ * 6 1024   VENDOR-IN
+ */
+
 /**
  * USB Device Configuration
  * @{
@@ -52,11 +62,11 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Control endpoint size
 #define  USB_DEVICE_EP_CTRL_SIZE       64
 
-//! Two interfaces for this device (Vendor + HID)
-#define  USB_DEVICE_NB_INTERFACE       2
+//! Two interfaces for this device (Vendor + CMSISDAPv2 + HID(CMSISDAPv1))
+#define  USB_DEVICE_NB_INTERFACE       3
 
-//! 3 endpoints used by Vendor and HID interfaces (HID OUT in EP0)
-#  define  USB_DEVICE_MAX_EP           3
+//! 3 endpoints used by Vendor(2), CMSISDAPv2(3) and HID(1) interfaces (HID OUT in EP0)
+#  define  USB_DEVICE_MAX_EP           6
 
 // In HS mode, size of bulk endpoints are 512
 // If CDC and Vendor endpoints all uses 2 banks, DPRAM is not enough: 4 bulk
@@ -92,6 +102,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 //! endpoints size for high speed
 #define UDI_VENDOR_EPS_SIZE_INT_HS    0
+#define xxUDI_VENDOR_EPS_SIZE_BULK_HS   512
 #define UDI_VENDOR_EPS_SIZE_BULK_HS   512
 #define UDI_VENDOR_EPS_SIZE_ISO_HS    0
 
@@ -99,8 +110,10 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define UDI_VENDOR_STRING_ID          4
 
 //! Endpoint numbers definition
-#define  UDI_VENDOR_EP_BULK_IN       (1 | USB_EP_DIR_IN)
-#define  UDI_VENDOR_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
+#define  xxUDI_VENDOR_EP_BULK_IN       (1 | USB_EP_DIR_IN)
+#define  xxUDI_VENDOR_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
+#define  UDI_VENDOR_EP_BULK_IN       (6 | USB_EP_DIR_IN)
+#define  UDI_VENDOR_EP_BULK_OUT      (5 | USB_EP_DIR_OUT)
 
 //! Interface number
 #define  UDI_VENDOR_IFACE_NUMBER     0
@@ -129,6 +142,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 #define UDI_HID_GENERIC_STRING_ID           5
 
+#define xxUDI_HID_GENERIC_EP_IN               ( 3 | USB_EP_DIR_IN )
 #define UDI_HID_GENERIC_EP_IN               ( 3 | USB_EP_DIR_IN )
 #define UDI_HID_GENERIC_EP_OUT              0
 
@@ -182,6 +196,39 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 //@}
 
+/**
+ * Configuration of second vendor interface (for CMSIS-DAP v2)
+ * @{
+ */
+//! Interface callback definition
+#define UDI_CMSISDAP_ENABLE_EXT()           usb_cmsisdap_enable()
+#define UDI_CMSISDAP_DISABLE_EXT()          usb_cmsisdap_disable()
+#define UDI_CMSISDAP_SETUP_OUT_RECEIVED()   usb_cmsisdap_setup_out_received()
+#define UDI_CMSISDAP_SETUP_IN_RECEIVED()   usb_cmsisdap_setup_in_received()
+
+//! endpoints size for full speed
+#define UDI_CMSISDAP_EPS_SIZE_BULK_FS  64
+
+//! endpoints size for high speed
+#define xxUDI_CMSISDAP_EPS_SIZE_BULK_HS  64
+#define UDI_CMSISDAP_EPS_SIZE_BULK_OUT_HS 512
+#define UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS 512
+#define UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS 64
+
+// String to describe interface
+#define UDI_CMSISDAP_STRING_ID         6
+
+//! Endpoint numbers definition
+#define  UDI_CMSISDAP_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
+#define  UDI_CMSISDAP_EP_BULK_IN1      (1 | USB_EP_DIR_IN)
+#define  UDI_CMSISDAP_EP_BULK_IN2      (4 | USB_EP_DIR_IN)
+
+//! Interface number
+#define  UDI_CMSISDAP_IFACE_NUMBER     2
+
+//@}
+
+
 //@}
 
 
@@ -193,25 +240,28 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! USB Interfaces descriptor structure
 #define UDI_COMPOSITE_DESC_T \
         udi_vendor_desc_t      udi_vendor;      \
-        udi_hid_generic_desc_t udi_hid_generic;        
+        udi_hid_generic_desc_t udi_hid_generic; \
+        udi_cmsisdap_desc_t    udi_cmsisdap;
 
 //! USB Interfaces descriptor value for Full Speed
 #define UDI_COMPOSITE_DESC_FS \
         .udi_vendor           = UDI_VENDOR_DESC_FS,     \
-        .udi_hid_generic      = UDI_HID_GENERIC_DESC        
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC,   \
+        .udi_cmsisdap         = UDI_CMSISDAP_DESC_FS
 
         
 
 //! USB Interfaces descriptor value for High Speed
 #define UDI_COMPOSITE_DESC_HS \
         .udi_vendor           = UDI_VENDOR_DESC_HS,     \
-        .udi_hid_generic      = UDI_HID_GENERIC_DESC
-        
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC, \
+        .udi_cmsisdap         = UDI_CMSISDAP_DESC_HS
 
 //! USB Interface APIs
 #define UDI_COMPOSITE_API \
         &udi_api_vendor,  \
-        &udi_api_hid_generic
+        &udi_api_hid_generic, \
+        &udi_api_cmsisdap
         
 //@}
 
@@ -226,6 +276,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! at the end of this file to avoid compile error
 #include "udi_vendor.h"
 #include "udi_hid_generic.h"
+#include "udi_cmsisdap.h"
 #include "main.h"
 
 #endif // _CONF_USB_H_
