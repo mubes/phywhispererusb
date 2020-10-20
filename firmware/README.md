@@ -38,6 +38,9 @@ The build process creates a number of artefacts;
 ```
 The philosophy behind this layout is to keep everything logically separate and so that thirdparty code can be incorporated without edits (and thus can be updated to a later version) by means of separating its configuration from the code itself.  If you _do_ need to modify code in a thirdparty module then move that code into the right part of the config tree so it doesn't get whacked when the thirdparty code is updated.
 
+# Pinning
+For the time being this is only suitable for use on a 3v3 target. *Do not* try and use it on anything else. On the user I/O connector D0 is SWD and D1 is SWCLK. Don't forget you'll need a ground too.
+
 # Using
 You _must_ load a bitfile into the FPGA before you do much with the device. This is most easily done with something like the following;
 ```
