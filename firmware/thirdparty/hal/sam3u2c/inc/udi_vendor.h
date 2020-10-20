@@ -64,8 +64,11 @@ extern "C" {
 # ifndef UDI_VENDOR_EPS_SIZE_INT_HS
 #   error UDI_VENDOR_EPS_SIZE_INT_HS must be defined in conf_usb.h file.
 # endif
-# ifndef UDI_VENDOR_EPS_SIZE_BULK_HS
-#   error UDI_VENDOR_EPS_SIZE_BULK_HS must be defined in conf_usb.h file.
+# ifndef UDI_VENDOR_EPS_SIZE_BULK_OUT_HS
+#   error UDI_VENDOR_EPS_SIZE_BULK_OUT_HS must be defined in conf_usb.h file.
+# endif
+# ifndef UDI_VENDOR_EPS_SIZE_BULK_IN_HS
+#   error UDI_VENDOR_EPS_SIZE_BULK_IN_HS must be defined in conf_usb.h file.
 # endif
 # ifndef UDI_VENDOR_EPS_SIZE_ISO_HS
 #   error UDI_VENDOR_EPS_SIZE_ISO_HS must be defined in conf_usb.h file.
@@ -138,8 +141,8 @@ extern UDC_DESC_STORAGE udi_api_t udi_api_vendor;
 	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_FS),
 
 # define UDI_VENDOR_EPS_BULK_DESC_HS \
-	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS),\
-	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS),
+	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_IN_HS),\
+	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_OUT_HS),
 
 #else
 # define UDI_VENDOR_EPS_BULK_DESC

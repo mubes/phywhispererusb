@@ -107,7 +107,11 @@ class PhyWhispererUSB(object):
         Performs actual bitstream download, do not call directly, call FPGAProgram
         """
 
-        transactionBytes = 2048
+        # This should be larger than this, with packetisation done at the layers below, but that
+        # causes the rxed buffers on the sam to be corrupted after the first ep-size bytes. Don't
+        # understand why, so this is a work-around that makes me very uncomfortable for now.
+
+        transactionBytes = 64
         t0 = 0
 
         buffer_ = [None] * int(16 * 1024 * 1024 / transactionBytes)

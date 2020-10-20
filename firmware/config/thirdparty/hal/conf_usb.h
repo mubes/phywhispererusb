@@ -5,12 +5,12 @@
 
 /* Endpoint allocations;
  *
- * 1 512    CMSIS-DAPv2 IN1 (Debug)
+ * 1 512    CMSIS-DAPv2 IN1 Single Buffered (Debug)
  * 2 512    CMSIS-DAPv2 OUT (Debug)
  * 3 64     CMSIS-DAPv1 IN
- * 4 64     CMSIS-DAPv2 IN2 (SWO)  TO BE CHANGED WITH (5)
- * 5 1024   VENDOR-OUT             TO BE CHANGED WITH (4)
- * 6 1024   VENDOR-IN
+ * 4 64     VENDOR-OUT
+ * 5 512    CMSIS-DAPv2 IN2 (SWO)
+ * 6 512    VENDOR-IN
  */
 
 /**
@@ -69,11 +69,10 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #  define  USB_DEVICE_MAX_EP           6
 
 // In HS mode, size of bulk endpoints are 512
-// If CDC and Vendor endpoints all uses 2 banks, DPRAM is not enough: 4 bulk
-// endpoints requires 4K bytes. So reduce the number of banks of CDC bulk
-// endpoints to use less DPRAM. Keep Vendor setting to keep performance.
-#define  UDD_BULK_NB_BANK(ep) 1
-//((ep == 5 || ep== 6) ? 1 : 2)
+// If all endpoints use 2 banks, DPRAM is not enough: 4 bulk
+// endpoints requires 4K bytes. So reduce the number of banks of CMSIS-DAPv2 bulk
+// IN endpoint to use less DPRAM since it's only used for response.
+#define  UDD_BULK_NB_BANK(ep) ((ep==1)?1:2)
 //@}
 
 //@}
@@ -102,18 +101,16 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 //! endpoints size for high speed
 #define UDI_VENDOR_EPS_SIZE_INT_HS    0
-#define xxUDI_VENDOR_EPS_SIZE_BULK_HS   512
-#define UDI_VENDOR_EPS_SIZE_BULK_HS   512
+#define UDI_VENDOR_EPS_SIZE_BULK_IN_HS   512
+#define UDI_VENDOR_EPS_SIZE_BULK_OUT_HS  64
 #define UDI_VENDOR_EPS_SIZE_ISO_HS    0
 
 // String to describe interface
 #define UDI_VENDOR_STRING_ID          4
 
 //! Endpoint numbers definition
-#define  xxUDI_VENDOR_EP_BULK_IN       (1 | USB_EP_DIR_IN)
-#define  xxUDI_VENDOR_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
 #define  UDI_VENDOR_EP_BULK_IN       (6 | USB_EP_DIR_IN)
-#define  UDI_VENDOR_EP_BULK_OUT      (5 | USB_EP_DIR_OUT)
+#define  UDI_VENDOR_EP_BULK_OUT      (4 | USB_EP_DIR_OUT)
 
 //! Interface number
 #define  UDI_VENDOR_IFACE_NUMBER     0
@@ -142,7 +139,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 #define UDI_HID_GENERIC_STRING_ID           5
 
-#define xxUDI_HID_GENERIC_EP_IN               ( 3 | USB_EP_DIR_IN )
 #define UDI_HID_GENERIC_EP_IN               ( 3 | USB_EP_DIR_IN )
 #define UDI_HID_GENERIC_EP_OUT              0
 
@@ -170,30 +166,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
         0xB1, 2,                /* HID Feature (Data, Variable, Absolute) */  \
 	0xC0	                /* End Collection */                          \
         }
-
-#define xxHID_REPORT_DESCRIPTOR { \
-        0x06, 0x00, 0xFF,	/* Usage Page (vendor defined) */             \
-	0x09, 0x01,	        /* Usage      (vendor defined) */             \
-                                                                              \
-	0xA1, 0x01,	        /* Collection (Application)    */             \
-        0x15, 0x00,             /* Value Logical Min 0         */             \
-        0x26, 0xFF, 0x00,       /* Value Logical Max 0xFF      */             \
-        0x75, 0x08,             /* Report Size 8 bits          */             \
-        0x96, 2, 0,             /* Inreport Count Size */           \
-                                                                              \
-        0x09, 0x01,             /* Usage      (vendor defined) */             \
-        0x81, 2,                /* HID Input (Data, Variable, Absolute) */    \
-        0x96, 2, 0,             /* Outreport Count Size */  \
-                                                                              \
-        0x09, 0x01,             /* Usage      (vendor defined) */             \
-        0x91, 2,                /* HID Output (Data, Variable, Absolute) */   \
-        0x95, UDI_HID_REPORT_FEATURE_SIZE,    /* Featreport Count Max Size */ \
-                                                                              \
-        0x09, 0x01,             /* Usage      (vendor defined) */             \
-        0xB1, 2,                /* HID Feature (Data, Variable, Absolute) */  \
-	0xC0	                /* End Collection */                          \
-        }
-
 //@}
 
 /**
@@ -204,7 +176,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define UDI_CMSISDAP_ENABLE_EXT()           usb_cmsisdap_enable()
 #define UDI_CMSISDAP_DISABLE_EXT()          usb_cmsisdap_disable()
 #define UDI_CMSISDAP_SETUP_OUT_RECEIVED()   usb_cmsisdap_setup_out_received()
-#define UDI_CMSISDAP_SETUP_IN_RECEIVED()   usb_cmsisdap_setup_in_received()
+#define UDI_CMSISDAP_SETUP_IN_RECEIVED()    usb_cmsisdap_setup_in_received()
 
 //! endpoints size for full speed
 #define UDI_CMSISDAP_EPS_SIZE_BULK_FS  64
@@ -213,7 +185,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define xxUDI_CMSISDAP_EPS_SIZE_BULK_HS  64
 #define UDI_CMSISDAP_EPS_SIZE_BULK_OUT_HS 512
 #define UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS 512
-#define UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS 64
+#define UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS 512
 
 // String to describe interface
 #define UDI_CMSISDAP_STRING_ID         6
@@ -221,7 +193,7 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Endpoint numbers definition
 #define  UDI_CMSISDAP_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
 #define  UDI_CMSISDAP_EP_BULK_IN1      (1 | USB_EP_DIR_IN)
-#define  UDI_CMSISDAP_EP_BULK_IN2      (4 | USB_EP_DIR_IN)
+#define  UDI_CMSISDAP_EP_BULK_IN2      (5 | USB_EP_DIR_IN)
 
 //! Interface number
 #define  UDI_CMSISDAP_IFACE_NUMBER     2
@@ -230,8 +202,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 
 
 //@}
-
-
 
 /**
  * Description of Composite Device

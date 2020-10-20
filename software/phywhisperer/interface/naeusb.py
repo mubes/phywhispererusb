@@ -386,11 +386,8 @@ class NAEUSB_Backend(NAEUSB_Serializer_base):
         logging.info('Found %s, Serial Number = %s' % (name, self.snum))
 
         self._usbdev = dev
-        # old versions
-        # self.rep = 0x81
-        # self.wep = 0x02
         self.rep = 0x86
-        self.wep = 0x05
+        self.wep = 0x04
         self._timeout = 200
 
         return foundId
