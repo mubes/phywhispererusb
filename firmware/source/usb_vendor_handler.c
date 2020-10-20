@@ -102,44 +102,34 @@ static void _vendor_bulk_out_received( udd_ep_status_t status,
 {
     UNUSED( ep );
 
-    if ( UDD_EP_TRANSFER_OK != status )
+    if ( UDD_EP_TRANSFER_OK == status )
     {
-        // Transfer aborted
-
-        //restart
-        udi_vendor_bulk_out_run(
-                    main_buf_loopback,
-                    sizeof( main_buf_loopback ),
-                    _vendor_bulk_out_received );
-
-        return;
-    }
-
-    if ( blockendpoint_usage == bep_emem )
-    {
-        for ( unsigned int i = 0; i < nb_transfered; i++ )
+        if ( blockendpoint_usage == bep_emem )
         {
-            xram[i] = main_buf_loopback[i];
-        }
+            for ( unsigned int i = 0; i < nb_transfered; i++ )
+            {
+                xram[i] = main_buf_loopback[i];
+            }
 
-        if ( FPGA_lockstatus() == fpga_blockout )
-        {
-            FPGA_releaselock();
+            if ( FPGA_lockstatus() == fpga_blockout )
+            {
+                FPGA_releaselock();
+            }
         }
-    }
-    else if ( blockendpoint_usage == bep_fpgabitstream )
-    {
+        else if ( blockendpoint_usage == bep_fpgabitstream )
+        {
 
-        /* Send byte to FPGA - this could eventually be done via SPI */
-        // TODO: is this dangerous?
-        for ( unsigned int i = 0; i < nb_transfered; i++ )
-        {
-            fpga_program_sendbyte( main_buf_loopback[i] );
-        }
+            /* Send byte to FPGA - this could eventually be done via SPI */
+            // TODO: is this dangerous?
+            for ( unsigned int i = 0; i < nb_transfered; i++ )
+            {
+                fpga_program_sendbyte( main_buf_loopback[i] );
+            }
 
 #if FPGA_USE_BITBANG
-        FPGA_CCLK_LOW();
+            FPGA_CCLK_LOW();
 #endif
+        }
     }
 
     udi_vendor_bulk_out_run(
@@ -333,9 +323,6 @@ static void _ctrl_fpga_reset( void )
     gpio_set_pin_high( PIN_EBI_USB_SPARE0 );
     gpio_set_pin_low( PIN_EBI_USB_SPARE0 );
 }
-
-/* ====================================================================================== */
-
 /* ====================================================================================== */
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -482,14 +469,11 @@ bool usb_vendor_enable( void )
 {
     _vendor_enable = true;
 
-    // Start data reception on OUT endpoints
-#if UDI_VENDOR_EPS_SIZE_BULK_FS
-    //main_vendor_bulk_in_received(UDD_EP_TRANSFER_OK, 0, 0);
+    // Start data reception on OUT endpoint
     udi_vendor_bulk_out_run(
                 main_buf_loopback,
                 sizeof( main_buf_loopback ),
                 _vendor_bulk_out_received );
-#endif
     return true;
 }
 /* ====================================================================================== */

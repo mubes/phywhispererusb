@@ -42,7 +42,7 @@ struct ledStat _s[NUM_LED] =
         .stateTable = {
             { 0, MILLIS_TO_TICKS( 1000 ), 0 }, /* OFF */
             { MILLIS_TO_TICKS( 1000 ), 0 }, /* ON */
-            { MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 200 ), MILLIS_TO_TICKS( 100 ), 0 },
+            { MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 2000 ), 0 },
             { MILLIS_TO_TICKS( 100 ), MILLIS_TO_TICKS( 100 ), 0 }
         }
     }

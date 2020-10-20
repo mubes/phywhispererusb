@@ -40,6 +40,7 @@ Provides definitions about:
 #include "generics.h"
 #include "usb_xmem.h"
 #include "led_states.h"
+#include "fpga_program.h"
 
 /* -------------------------------------------------------------------------------*/
 /* Patchups to deal with different defines that don't naturally exist in our code */
@@ -63,7 +64,10 @@ uint32_t DAP_ProcessVendorCommandEx(const uint8_t *request, uint8_t *response);
 /// requrie 2 processor cycles for a I/O Port Write operation.  If the Debug Unit uses
 /// a Cortex-M0+ processor with high-speed peripheral I/O only 1 processor cycle might be
 /// requrired.
-#define IO_PORT_WRITE_CYCLES 2 ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
+
+/// This is set to an unreasonably high number to bypass delay. Revisit when a faster
+/// SWD implementation is available.
+#define IO_PORT_WRITE_CYCLES 100 ///< I/O Cycles: 2=default, 1=Cortex-M0+ fast I/0
 
 /// Indicate that Serial Wire Debug (SWD) communication mode is available at the Debug Access Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -168,16 +172,18 @@ of the same I/O port. The following SWDIO I/O Pin functions are provided:
 uint8_t dbg_op_state;
 uint8_t dbg_io_dir;
 
-/* Bits on the connector */
-#define SWDIO_BIT (0)
-#define SWK_BIT (1)
-#define RST_BIT (3)
-
-/* Registers on the FPGA */
-#define USERIO_DATA (0x4b)
-#define USERIO_PWRDRIVEN (0x4c)
-
 // Configure DAP I/O pins ------------------------------
+
+__STATIC_INLINE void GRAB_FPGA(void)
+{
+  while ( !try_enter_cs() );
+}
+
+__STATIC_INLINE void RELEASE_FPGA(void)
+
+{
+  exit_cs();
+}
 
 /** Setup JTAG I/O pins: TCK, TMS, TDI, TDO, nTRST, and nRESET.
 Configures the DAP Hardware I/O pins for JTAG mode:
@@ -193,10 +199,12 @@ Configures the DAP Hardware I/O pins for Serial Wire Debug (SWD) mode:
 */
 __STATIC_INLINE void PORT_SWD_SETUP(void)
 {
-  dbg_io_dir=((1<<SWDIO_BIT)|(1<<SWK_BIT)|(1<<RST_BIT));
-  dbg_op_state = ((1 << SWK_BIT) | (1 << RST_BIT)| (1 << SWDIO_BIT));
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
-  unsafe_writeuint8(USERIO_PWRDRIVEN, dbg_io_dir);
+  dbg_io_dir=((1<<USERIO_SWDIO_BIT)|(1<<USERIO_SWK_BIT)|(1<<USERIO_RST_BIT));
+  dbg_op_state = ((1 << USERIO_SWK_BIT) | (1 << USERIO_RST_BIT)| (1 << USERIO_SWDIO_BIT));
+  GRAB_FPGA();
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
+  unsafe_writeuint8(FPGA_USERIO_PWRDRIVEN, dbg_io_dir);
+  RELEASE_FPGA();
 }
 
 /** Disable JTAG/SWD I/O Pins.
@@ -207,10 +215,17 @@ __STATIC_INLINE void PORT_OFF(void)
 {
   dbg_op_state = 0;
   dbg_io_dir = 0;
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
-  unsafe_writeuint8(USERIO_PWRDRIVEN, dbg_io_dir);
+  GRAB_FPGA();
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
+  unsafe_writeuint8(FPGA_USERIO_PWRDRIVEN, dbg_io_dir);
+  RELEASE_FPGA();
 }
 
+/* ============================================================
+ * To speed up access all routines below this point are assumed
+ * to be guarded by GRAB/FREE at a higher level in the code.
+ * ============================================================
+ */
 // SWCLK/TCK I/O pin -------------------------------------
 
 /** SWCLK/TCK I/O pin: Get Input.
@@ -218,7 +233,7 @@ __STATIC_INLINE void PORT_OFF(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN(void)
 {
-  return (dbg_op_state & (1 << SWK_BIT)) != 0;
+  return (dbg_op_state & (1 << USERIO_SWK_BIT)) != 0;
 }
 
 /** SWCLK/TCK I/O pin: Set Output to High.
@@ -226,8 +241,8 @@ Set the SWCLK/TCK DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
 {
-      dbg_op_state |= (1 << SWK_BIT);
-      unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+      dbg_op_state |= (1 << USERIO_SWK_BIT);
+      unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
 }
 
 /** SWCLK/TCK I/O pin: Set Output to Low.
@@ -235,8 +250,8 @@ Set the SWCLK/TCK DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
-  dbg_op_state &= ~(1 << SWK_BIT);
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+  dbg_op_state &= ~(1 << USERIO_SWK_BIT);
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
@@ -246,7 +261,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-  return (unsafe_readuint8(USERIO_DATA) & (1 << SWDIO_BIT)) != 0;
+  return (unsafe_readuint8(FPGA_USERIO_DATA) & (1 << USERIO_SWDIO_BIT)) != 0;
 }
 
 /** SWDIO/TMS I/O pin: Set Output to High.
@@ -254,8 +269,8 @@ Set the SWDIO/TMS DAP hardware I/O pin to high level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
-  dbg_op_state |= (1 << SWDIO_BIT);
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+  dbg_op_state |= (1 << USERIO_SWDIO_BIT);
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
 }
 
 /** SWDIO/TMS I/O pin: Set Output to Low.
@@ -263,8 +278,8 @@ Set the SWDIO/TMS DAP hardware I/O pin to low level.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-  dbg_op_state &= ~(1 << SWDIO_BIT);
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+  dbg_op_state &= ~(1 << USERIO_SWDIO_BIT);
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
 }
 
 /** SWDIO I/O pin: Get Input (used in SWD mode only).
@@ -272,7 +287,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-  return (unsafe_readuint8(USERIO_DATA) & (1 << SWDIO_BIT))!=0;
+  return (unsafe_readuint8(FPGA_USERIO_DATA) & (1 << USERIO_SWDIO_BIT))!=0;
 }
 
 /** SWDIO I/O pin: Set Output (used in SWD mode only).
@@ -282,13 +297,13 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 {
   if (bit&1)
   {
-    dbg_op_state |= (1 << SWDIO_BIT);
+    dbg_op_state |= (1 << USERIO_SWDIO_BIT);
   }
   else
   {
-    dbg_op_state &= ~(1 << SWDIO_BIT);
+    dbg_op_state &= ~(1 << USERIO_SWDIO_BIT);
   }
-  unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+  unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
 }
 
 /** SWDIO I/O pin: Switch to Output mode (used in SWD mode only).
@@ -297,8 +312,8 @@ called prior \ref PIN_SWDIO_OUT function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
-  dbg_io_dir |= (1 << SWDIO_BIT);
-  unsafe_writeuint8(USERIO_PWRDRIVEN, dbg_io_dir);
+  dbg_io_dir |= (1 << USERIO_SWDIO_BIT);
+  unsafe_writeuint8(FPGA_USERIO_PWRDRIVEN, dbg_io_dir);
 }
 
 /** SWDIO I/O pin: Switch to Input mode (used in SWD mode only).
@@ -307,8 +322,8 @@ called prior \ref PIN_SWDIO_IN function calls.
 */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-  dbg_io_dir &= ~(1 << SWDIO_BIT);
-  unsafe_writeuint8(USERIO_PWRDRIVEN, dbg_io_dir);
+  dbg_io_dir &= ~(1 << USERIO_SWDIO_BIT);
+  unsafe_writeuint8(FPGA_USERIO_PWRDRIVEN, dbg_io_dir);
 }
 
 
@@ -367,7 +382,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
 */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 {
-  return (unsafe_readuint8(USERIO_DATA) & (1 << RST_BIT)) != 0;
+  return (unsafe_readuint8(FPGA_USERIO_DATA) & (1 << USERIO_RST_BIT)) != 0;
 }
 
 /** nRESET I/O pin: Set Output.
@@ -381,15 +396,15 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
   if (bit & 1)
   {
     /* Make reset pin an input...it will then pull up via external resistance */
-    dbg_io_dir &= ~(1 << RST_BIT);
+    dbg_io_dir &= ~(1 << USERIO_RST_BIT);
   }
   else
   {
-    dbg_op_state &= ~(1 << RST_BIT);
-    dbg_io_dir |= (1 << RST_BIT);
-    unsafe_writeuint8(USERIO_DATA, dbg_op_state);
+    dbg_op_state &= ~(1 << USERIO_RST_BIT);
+    dbg_io_dir |= (1 << USERIO_RST_BIT);
+    unsafe_writeuint8(FPGA_USERIO_DATA, dbg_op_state);
   }
-  unsafe_writeuint8(USERIO_PWRDRIVEN, dbg_io_dir);
+  unsafe_writeuint8(FPGA_USERIO_PWRDRIVEN, dbg_io_dir);
 }
 ///@}
 

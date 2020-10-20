@@ -47,16 +47,9 @@ static void _cmsisdap_bulk_in_received( udd_ep_status_t status,
 
     if ( UDD_EP_TRANSFER_OK == status )
     {
-        /* Action this buffer */
+        /* Only single buffers are sent back, so nothing to be done here */
 
     }
-
-
-    /* ...queue the next one */
-    udi_cmsisdap_bulk_out_run(
-                cmsis_buf,
-                CMSISDAP_BUFFER_SIZE,
-                _cmsisdap_bulk_in_received );
 }
 /* ====================================================================================== */
 static void _cmsisdap_bulk_out_received( udd_ep_status_t status,
@@ -93,7 +86,7 @@ static void _cmsisdap_bulk_out_received( udd_ep_status_t status,
 static void _cmsisdap_msg_arrived( void )
 
 {
-    DBG( "MESSAGE ARRIVED" EOL );
+    DBG( "CTRL MESSAGE ARRIVED" EOL );
 }
 /* ====================================================================================== */
 /* ====================================================================================== */

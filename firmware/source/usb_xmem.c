@@ -18,10 +18,11 @@
 #include <asf.h>
 #include "usb_xmem.h"
 #include "led_states.h"
+#include "fpga_program.h"
 
 /* Access pointer for FPGA Interface */
 uint8_t volatile *xram = ( uint8_t * ) PSRAM_BASE_ADDRESS;
-
+static volatile uint32_t fpgastore = 0;
 static volatile fpga_lockstatus_t _fpga_locked = fpga_unlocked;
 
 #define FPGA_ACCESS_GUARD_COUNT (10000)
@@ -74,9 +75,15 @@ void exit_cs( void )
 /* ====================================================================================== */
 void FPGA_setaddr( uint32_t addr )
 {
+    if ( fpgastore == addr )
+    {
+        return;
+    }
+
     FPGA_ADDR_PORT->PIO_ODSR = ( FPGA_ADDR_PORT->PIO_ODSR & 0x40 ) | ( addr & 0x3F ) | ( ( addr & 0xC0 ) << 1 );
     gpio_set_pin_low( PIN_EBI_USB_SPARE1 );
     gpio_set_pin_high( PIN_EBI_USB_SPARE1 );
+    fpgastore = addr;
 }
 
 /* ====================================================================================== */
@@ -124,28 +131,16 @@ uint32_t safe_readuint32( uint16_t fpgaaddr )
     return data;
 }
 
-uint32_t fpgastore = 0;
-
 /* ====================================================================================== */
 uint8_t unsafe_readuint8( uint16_t fpgaaddr )
 {
-    if ( fpgaaddr != fpgastore )
-    {
-        FPGA_setaddr( fpgaaddr );
-        fpgastore = fpgaaddr;
-    }
-
+    FPGA_setaddr( fpgaaddr );
     return *xram;
 }
 /* ====================================================================================== */
 bool unsafe_writeuint8( uint16_t fpgaaddr, uint8_t data )
 {
-    if ( fpgaaddr != fpgastore )
-    {
-        FPGA_setaddr( fpgaaddr );
-        fpgastore = fpgaaddr;
-    }
-
+    FPGA_setaddr( fpgaaddr );
     *xram = data;
     return true;
 }
@@ -269,8 +264,6 @@ void smc_fasttiming( void )
 }
 /* ====================================================================================== */
 bool check_fpga( void )
-
-#define FPGA_BUILD_TIME_REGISTER 0x4F
 
 {
     uint8_t rxBuffer[4] = {0xff};

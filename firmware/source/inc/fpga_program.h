@@ -43,6 +43,16 @@
 #define PIN_FPGA_DO_GPIO PIO_PA18_IDX
 #define FPGA_PROG_USART_ID ID_USART0
 
+// FPGA Registers that we use (i.e. non-exhaustive list)
+#define FPGA_USERIO_DATA         (0x4b)
+#define FPGA_USERIO_PWRDRIVEN    (0x4c)
+#define FPGA_BUILD_TIME_REGISTER (0x4F)
+
+// Bits on the connector
+#define USERIO_SWDIO_BIT (0)
+#define USERIO_SWK_BIT   (1)
+#define USERIO_RST_BIT   (3)
+
 //! FPGA Programming Pins
 #define PIN_FPGA_PROGRAM_FLAGS  (PIO_TYPE_PIO_OUTPUT_1 | PIO_DEFAULT)
 #define FPGA_NPROG_LOW()        gpio_set_pin_low(PIN_FPGA_PROGRAM_GPIO)

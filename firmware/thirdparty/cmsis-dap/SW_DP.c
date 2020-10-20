@@ -68,6 +68,7 @@ void SWJ_Sequence (uint32_t count, const uint8_t *data) {
 
   val = 0U;
   n = 0U;
+  GRAB_FPGA();
   while (count--) {
     if (n == 0U) {
       val = *data++;
@@ -82,6 +83,7 @@ void SWJ_Sequence (uint32_t count, const uint8_t *data) {
     val >>= 1;
     n--;
   }
+  RELEASE_FPGA();
 }
 #endif
 
@@ -102,6 +104,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
     n = 64U;
   }
 
+  GRAB_FPGA();
   if (info & SWD_SEQUENCE_DIN) {
     while (n) {
       val = 0U;
@@ -122,6 +125,7 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
       }
     }
   }
+  RELEASE_FPGA();
 }
 #endif
 
@@ -142,6 +146,7 @@ static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         
                                                                                 \
   uint32_t n;                                                                   \
                                                                                 \
+  GRAB_FPGA();                                                                  \
   /* Packet Request */                                                          \
   parity = 0U;                                                                  \
   SW_WRITE_BIT(1U);                     /* Start Bit */                         \
@@ -226,6 +231,7 @@ static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         
       }                                                                         \
     }                                                                           \
     PIN_SWDIO_OUT(1U);                                                          \
+    RELEASE_FPGA();                                                             \
     return ((uint8_t)ack);                                                      \
   }                                                                             \
                                                                                 \
@@ -248,6 +254,7 @@ static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         
       }                                                                         \
     }                                                                           \
     PIN_SWDIO_OUT(1U);                                                          \
+    RELEASE_FPGA();                                                             \
     return ((uint8_t)ack);                                                      \
   }                                                                             \
                                                                                 \
@@ -257,6 +264,7 @@ static uint8_t SWD_Transfer##speed (uint32_t request, uint32_t *data) {         
   }                                                                             \
   PIN_SWDIO_OUT_ENABLE();                                                       \
   PIN_SWDIO_OUT(1U);                                                            \
+  RELEASE_FPGA();                                                               \
   return ((uint8_t)ack);                                                        \
 }
 

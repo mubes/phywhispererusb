@@ -63,8 +63,6 @@ void fpga_program_setup2( void )
 
 void fpga_program_sendbyte( uint8_t databyte )
 {
-    //For debug only
-    //fpga_total_bs_len++;
     usart_putchar( FPGA_PROG_USART, databyte );
 }
 /* ====================================================================================== */
