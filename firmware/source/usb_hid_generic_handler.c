@@ -6,8 +6,6 @@
 #include "DAP.h"
 #include "DAP_queue.h"
 
-#undef REPORT_LEVEL
-#define REPORT_LEVEL 3
 #include "generics.h"
 
 static bool _enabled;           // Indicator of if HID GENERIC is currently running

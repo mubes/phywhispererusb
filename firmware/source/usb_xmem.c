@@ -74,7 +74,7 @@ void exit_cs( void )
 /* ====================================================================================== */
 void FPGA_setaddr( uint32_t addr )
 {
-    FPGA_ADDR_PORT->PIO_ODSR = (FPGA_ADDR_PORT->PIO_ODSR & 0x40) | (addr & 0x3F) | ((addr & 0xC0) << 1);
+    FPGA_ADDR_PORT->PIO_ODSR = ( FPGA_ADDR_PORT->PIO_ODSR & 0x40 ) | ( addr & 0x3F ) | ( ( addr & 0xC0 ) << 1 );
     gpio_set_pin_low( PIN_EBI_USB_SPARE1 );
     gpio_set_pin_high( PIN_EBI_USB_SPARE1 );
 }
@@ -268,25 +268,26 @@ void smc_fasttiming( void )
                 );
 }
 /* ====================================================================================== */
-bool check_fpga(void)
+bool check_fpga( void )
 
 #define FPGA_BUILD_TIME_REGISTER 0x4F
 
 {
-    uint8_t rxBuffer[4]={0xff};
+    uint8_t rxBuffer[4] = {0xff};
 
     /* Read FPGA build date */
     safe_readbytes( FPGA_BUILD_TIME_REGISTER, rxBuffer, 4 );
 
-    if (rxBuffer[3]!=0xff)
+    if ( rxBuffer[3] != 0xff )
     {
-        led_states_set(ERROR_LED,ERROR_LED_OFF);
+        led_states_set( ERROR_LED, ERROR_LED_OFF );
     }
     else
     {
-        led_states_set(ERROR_LED,ERROR_LED_NOFPGA);
+        led_states_set( ERROR_LED, ERROR_LED_NOFPGA );
     }
-    return (rxBuffer[3]!=0xff);
+
+    return ( rxBuffer[3] != 0xff );
 }
 /* ====================================================================================== */
 

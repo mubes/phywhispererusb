@@ -62,7 +62,7 @@ void FPGA_setaddr( uint32_t addr );
 void smc_fasttiming( void );
 void smc_normaltiming( void );
 
-bool check_fpga(void);
+bool check_fpga( void );
 /* ====================================================================================== */
 
 #endif /* USB_XMEM_H_ */

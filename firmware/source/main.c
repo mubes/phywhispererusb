@@ -7,8 +7,6 @@
 #include "DAP.h"
 #include "led_states.h"
 
-#undef REPORT_LEVEL
-#define REPORT_LEVEL 4
 #include "generics.h"
 
 char g_usb_serial_number[USB_DEVICE_GET_SERIAL_NAME_LENGTH + 1]; /* Serial Number - will be read by device ID */
@@ -88,6 +86,7 @@ int main( void )
         {
             phyw_driver_pwr_toggle();
         }
+
         led_states_update();
     }
 }

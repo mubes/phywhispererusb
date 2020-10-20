@@ -21,8 +21,6 @@
 #include "DAP.h"
 #include "DAP_queue.h"
 
-#undef REPORT_LEVEL
-#define REPORT_LEVEL 4
 #include "generics.h"
 
 /* ====================================================================================== */
@@ -49,20 +47,20 @@ static void _cmsisdap_bulk_in_received( udd_ep_status_t status,
 
     if ( UDD_EP_TRANSFER_OK == status )
     {
-      /* Action this buffer */
+        /* Action this buffer */
 
     }
 
-    
+
     /* ...queue the next one */
     udi_cmsisdap_bulk_out_run(
-                              cmsis_buf,
-                              CMSISDAP_BUFFER_SIZE,
-                              _cmsisdap_bulk_in_received );
+                cmsis_buf,
+                CMSISDAP_BUFFER_SIZE,
+                _cmsisdap_bulk_in_received );
 }
 /* ====================================================================================== */
 static void _cmsisdap_bulk_out_received( udd_ep_status_t status,
-                                         iram_size_t nb_transfered, udd_ep_id_t ep )
+        iram_size_t nb_transfered, udd_ep_id_t ep )
 {
     UNUSED( ep );
     uint8_t *rbuf;
@@ -72,30 +70,30 @@ static void _cmsisdap_bulk_out_received( udd_ep_status_t status,
 
     if ( UDD_EP_TRANSFER_OK == status )
     {
-      DAP_queue_execute_buf( &DAP_Cmd_queue, cmsis_buf, CMSISDAP_BUFFER_SIZE, &rbuf );
+        DAP_queue_execute_buf( &DAP_Cmd_queue, cmsis_buf, CMSISDAP_BUFFER_SIZE, &rbuf );
 
-      if ( DAP_queue_get_send_buf( &DAP_Cmd_queue, &sbuf, &slen ) )
+        if ( DAP_queue_get_send_buf( &DAP_Cmd_queue, &sbuf, &slen ) )
         {
-          /* Better schedule a message back with the result */
-          udi_cmsisdap_bulk_in_run(
-                                   sbuf,
-                                   slen,
-                                   _cmsisdap_bulk_in_received
-                                   );
+            /* Better schedule a message back with the result */
+            udi_cmsisdap_bulk_in_run(
+                        sbuf,
+                        slen,
+                        _cmsisdap_bulk_in_received
+            );
         }
     }
-    
+
     /* Queue the next one */
     udi_cmsisdap_bulk_out_run(
-                            cmsis_buf,
-                            CMSISDAP_BUFFER_SIZE,
-                            _cmsisdap_bulk_out_received );
+                cmsis_buf,
+                CMSISDAP_BUFFER_SIZE,
+                _cmsisdap_bulk_out_received );
 }
 /* ====================================================================================== */
 static void _cmsisdap_msg_arrived( void )
 
 {
-  DBG("MESSAGE ARRIVED" EOL);
+    DBG( "MESSAGE ARRIVED" EOL );
 }
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -112,12 +110,12 @@ static void _cmsisdap_msg_arrived( void )
 
 bool usb_cmsisdap_setup_out_received( void )
 {
-  DBG("CMSISDAP setup out received" EOL);
-  udd_g_ctrlreq.payload = cmsis_buf;
-  udd_g_ctrlreq.payload_size = min( udd_g_ctrlreq.req.wLength, CMSISDAP_BUFFER_SIZE );
-  udd_g_ctrlreq.callback = _cmsisdap_msg_arrived;
+    DBG( "CMSISDAP setup out received" EOL );
+    udd_g_ctrlreq.payload = cmsis_buf;
+    udd_g_ctrlreq.payload_size = min( udd_g_ctrlreq.req.wLength, CMSISDAP_BUFFER_SIZE );
+    udd_g_ctrlreq.callback = _cmsisdap_msg_arrived;
 
-  return true;
+    return true;
 }
 
 /* ====================================================================================== */
@@ -128,9 +126,9 @@ bool usb_cmsisdap_setup_out_received( void )
 
 bool usb_cmsisdap_setup_in_received( void )
 {
-  DBG("CMSISDAP Setup IN" EOL);
+    DBG( "CMSISDAP Setup IN" EOL );
 
-  return true;
+    return true;
 }
 /* ====================================================================================== */
 /*! \brief Notify via user interface that enumeration is ok
@@ -141,14 +139,14 @@ bool usb_cmsisdap_setup_in_received( void )
 
 bool usb_cmsisdap_enable( void )
 {
-  DBG("CMSISDAP Enable called" EOL);
+    DBG( "CMSISDAP Enable called" EOL );
     _cmsisdap_enable = true;
     DAP_queue_init( &DAP_Cmd_queue );
     udi_cmsisdap_bulk_out_run(
                 cmsis_buf,
                 CMSISDAP_BUFFER_SIZE,
                 _cmsisdap_bulk_out_received );
-    
+
     return true;
 }
 /* ====================================================================================== */

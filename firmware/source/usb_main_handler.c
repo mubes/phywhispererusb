@@ -2,7 +2,6 @@
 #include <stdbool.h>
 #include "usb_main_handler.h"
 
-#define REPORT_LEVEL 4
 #include "generics.h"
 
 /* ====================================================================================== */

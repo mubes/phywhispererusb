@@ -43,7 +43,6 @@
 #include <string.h>
 
 /* MODIFICATION: Add reporting level and debug throughout the file */
-#define REPORT_LEVEL 4
 #include "generics.h"
 
 /**
