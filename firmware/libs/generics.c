@@ -16,6 +16,7 @@ static char _scratchpad[MAX_STRLEN];
 /* ======================================================================================= */
 /* ======================================================================================= */
 static __INLINE uint32_t _SendCharn ( uint8_t c, uint32_t n, uint32_t *ch )
+
 {
     if ( ( CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk ) && /* Trace enabled */
             ( ITM->TCR & ITM_TCR_ITMENA_Msk ) && /* ITM enabled */
@@ -58,6 +59,38 @@ static __INLINE uint32_t _SendCharn ( uint8_t c, uint32_t n, uint32_t *ch )
 /* Publically accessible routines                                                         */
 /* ====================================================================================== */
 /* ====================================================================================== */
+/* ====================================================================================== */
+void genericsITMSendInt ( uint8_t c, uint32_t n )
+{
+    if ( ( CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk ) && /* Trace enabled */
+            ( ITM->TCR & ITM_TCR_ITMENA_Msk ) && /* ITM enabled */
+            ( ITM->TER & ( 1ul << c ) ) /* ITM Port c enabled */
+       )
+    {
+        while ( ITM->PORT[c].u32 == 0 ); // Port available?
+
+        ITM->PORT[c].u32 = n;
+    }
+}
+/* ====================================================================================== */
+void genericsITMSendSint ( uint8_t c, uint16_t n )
+{
+    if ( ( CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk ) && /* Trace enabled */
+            ( ITM->TCR & ITM_TCR_ITMENA_Msk ) && /* ITM enabled */
+            ( ITM->TER & ( 1ul << c ) ) /* ITM Port c enabled */
+       )
+    {
+        while ( ITM->PORT[c].u32 == 0 ); // Port available?
+
+        ITM->PORT[c].u16 = n;
+    }
+}
+/* ====================================================================================== */
+void genericsITMSendChar ( uint8_t c, char ch )
+
+{
+    _SendCharn( c, 1, (uint32_t *)&ch );
+}
 /* ====================================================================================== */
 void genericsReport( const char *fmt, ... )
 

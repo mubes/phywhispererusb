@@ -67,6 +67,9 @@
 
 // ============================================================================================
 
+void genericsITMSendInt ( uint8_t c, uint32_t n );
+void genericsITMSendSint ( uint8_t c, uint16_t n );
+void genericsITMSendChar ( uint8_t c, char ch );
 void genericsAssertDA( const char *file, uint32_t line, const char *function, const char *test );
 void genericsReport( const char *fmt, ... );
 
