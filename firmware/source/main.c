@@ -89,11 +89,10 @@ int main( void )
         {
             /* fpga came to life, so switch on trace monitoring */
             GRAB_FPGA();
-            //unsafe_writeuint8( FPGA_REG_ARM, 3 );
             unsafe_writeuint8(0xa1,7);
             unsafe_writeuint8(0xa0,1);
-            while (unsafe_readuint8(0x10)!=2)
-            ERR("*");
+            while (unsafe_readuint8(0x10)!=2);
+            unsafe_writeuint8( FPGA_REG_ARM, 3 );
             RELEASE_FPGA();
             fpga_active = true;
             DBG( "FPGA Awake" EOL );
@@ -113,9 +112,6 @@ int main( void )
                 GRAB_FPGA();
                 unsafe_readbytes( FPGA_REG_SNIFF_FIFO_RD, rb, 4 );
                 RELEASE_FPGA();
-
-                if (rb[0] | rb[1] | rb[2]) ERR("*****************************************");
-                ERR("%02x %02x %02x %02x" EOL,rb[0],rb[1],rb[2],rb[3]);
 
                 if ( ( rb[FPGA_FIFO_BYTE_STAT] & FPGA_FE_FIFO_CMD_MASK ) != FPGA_FE_FIFO_CMD_STAT )
                 {

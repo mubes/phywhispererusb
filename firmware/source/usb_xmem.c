@@ -89,7 +89,7 @@ void FPGA_setaddr( uint32_t addr )
 {
     if ( fpgastore == addr )
     {
-    //    return;
+        return;
     }
 
     FPGA_ADDR_PORT->PIO_ODSR = ( FPGA_ADDR_PORT->PIO_ODSR & 0x40 ) | ( addr & 0x3F ) | ( ( addr & 0xC0 ) << 1 );
