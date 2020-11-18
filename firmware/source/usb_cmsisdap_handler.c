@@ -32,6 +32,16 @@ static volatile bool _cmsisdap_enable;        /* Flag indicating this endpoint i
 static uint8_t cmsis_buf[CMSISDAP_BUFFER_SIZE];
 static DAP_queue DAP_Cmd_queue;
 
+#ifdef UDI_CMSISDAP_EP_BULK_IN2
+    #define NO_SWOBUFFERS 3
+    static uint8_t swobuffer[NO_SWOBUFFERS][UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS];
+    static uint8_t rdBuff;
+    static uint8_t wrBuff;
+    static uint32_t wrPos;
+
+    volatile bool txRunning;
+#endif
+
 /* ====================================================================================== */
 /* ====================================================================================== */
 /* ====================================================================================== */
@@ -44,12 +54,32 @@ static void _cmsisdap_bulk_in_received( udd_ep_status_t status,
 {
     UNUSED( nb_transfered );
     UNUSED( ep );
+    UNUSED( status );
 
-    if ( UDD_EP_TRANSFER_OK == status )
+#ifdef UDI_CMSISDAP_EP_BULK_IN2
+    /* We don't worry about the SWD endpoint, because only single buffers are sent back */
+    /* So only the SWO endpoint to be considered here. */
+
+    if ( UDI_CMSISDAP_EP_BULK_IN2 == ep )
     {
-        /* Only single buffers are sent back, so nothing to be done here */
+        /* Are there any data waiting to go? */
+        if ( ( rdBuff != wrBuff ) || ( wrPos > 0 ) )
+        {
+            /* Yes, so adjust pointers then send it */
+            uint8_t nrdBuff = ( rdBuff + 1 ) % NO_SWOBUFFERS;
 
+            udi_cmsisdap_bulk_swo_in_run( swobuffer[rdBuff], ( wrBuff == nrdBuff ) ? wrPos : UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS, _cmsisdap_bulk_in_received );
+            wrPos = 0;
+            wrBuff = ( wrBuff + 1 ) % NO_SWOBUFFERS;
+            rdBuff = nrdBuff;
+        }
+        else
+        {
+            txRunning = false;
+        }
     }
+
+#endif
 }
 /* ====================================================================================== */
 static void _cmsisdap_bulk_out_received( udd_ep_status_t status,
@@ -152,4 +182,37 @@ void usb_cmsisdap_disable( void )
 {
     _cmsisdap_enable = false;
 }
+/* ====================================================================================== */
+
+#ifdef UDI_CMSISDAP_EP_BULK_IN2
+
+void usb_cmsisdap_swo_send( uint8_t c )
+
+{
+    irqflags_t flags;
+
+    flags = cpu_irq_save();
+    swobuffer[wrBuff][wrPos++] = c;
+
+    if ( UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS == wrPos )
+    {
+        wrPos = 0;
+        wrBuff = ( wrBuff + 1 ) % NO_SWOBUFFERS;
+    }
+
+    if ( txRunning == false )
+    {
+        uint8_t nrdBuff = ( rdBuff + 1 ) % NO_SWOBUFFERS;
+        udi_cmsisdap_bulk_swo_in_run( swobuffer[rdBuff], wrPos, _cmsisdap_bulk_in_received );
+        wrPos = 0;
+        wrBuff = ( wrBuff + 1 ) % NO_SWOBUFFERS;
+        rdBuff = nrdBuff;
+        txRunning = true;
+    }
+
+    cpu_irq_restore( flags );
+}
+
+#endif
+
 /* ====================================================================================== */

@@ -35,6 +35,9 @@ int FPGA_setlock( fpga_lockstatus_t lockstatus );
 // Release the lock.
 void FPGA_releaselock( void );
 
+// Perform FPGA reset
+void FPGA_reset( void );
+
 // Check the lock status. Useful in the USB stack
 fpga_lockstatus_t FPGA_lockstatus( void );
 

@@ -1,7 +1,7 @@
 /**
  * \file
  *
- * \brief USB CMSIS-DAP class interface.
+ * \brief USB SWV class interface.
  *
  * Code from NewAE based on code that was originally
  * Copyright (c) 2011-2018 Microchip Technology Inc. and its subsidiaries.
@@ -40,36 +40,37 @@
 #include "usb_protocol_vendor.h"
 #include "udd.h"
 #include "udc.h"
-#include "udi_cmsisdap.h"
+#include "udi_swv.h"
 #include <string.h>
 
+#ifdef SWV_SEPARATE
 // Configuration check
-#ifndef UDI_CMSISDAP_ENABLE_EXT
-# error UDI_CMSISDAP_ENABLE_EXT must be defined in conf_usb.h file.
+#ifndef UDI_SWV_ENABLE_EXT
+# error UDI_SWV_ENABLE_EXT must be defined in conf_usb.h file.
 #endif
-#ifndef UDI_CMSISDAP_DISABLE_EXT
-# error UDI_CMSISDAP_DISABLE_EXT must be defined in conf_usb.h file.
+#ifndef UDI_SWV_DISABLE_EXT
+# error UDI_SWV_DISABLE_EXT must be defined in conf_usb.h file.
 #endif
 
 /**
- * \ingroup udi_cmsisdap_group
- * \defgroup udi_cmsisdap_group_udc Interface with USB Device Core (UDC)
+ * \ingroup udi_swv_group
+ * \defgroup udi_swv_group_udc Interface with USB Device Core (UDC)
  *
  * Structures and functions required by UDC.
  *
  * @{
  */
-bool udi_cmsisdap_enable(void);
-void udi_cmsisdap_disable(void);
-bool udi_cmsisdap_setup(void);
-uint8_t udi_cmsisdap_getsetting(void);
+bool udi_swv_enable(void);
+void udi_swv_disable(void);
+bool udi_swv_setup(void);
+uint8_t udi_swv_getsetting(void);
 
 //! Global structure which contains standard UDI API for UDC
-UDC_DESC_STORAGE udi_api_t udi_api_cmsisdap = {
-	.enable = udi_cmsisdap_enable,
-	.disable = udi_cmsisdap_disable,
-	.setup = udi_cmsisdap_setup,
-	.getsetting = udi_cmsisdap_getsetting,
+UDC_DESC_STORAGE udi_api_t udi_api_swv = {
+	.enable = udi_swv_enable,
+	.disable = udi_swv_disable,
+	.setup = udi_swv_setup,
+	.getsetting = udi_swv_getsetting,
 	.sof_notify = NULL,
 };
 
@@ -77,8 +78,8 @@ UDC_DESC_STORAGE udi_api_t udi_api_cmsisdap = {
 
 
 /**
- * \ingroup udi_cmsisdap_group
- * \defgroup udi_cmsisdap_group_internal Implementation of UDI CMSISDAP Class
+ * \ingroup udi_swv_group
+ * \defgroup udi_swv_group_internal Implementation of UDI SWV Class
  *
  * Class internal implementation
  * @{
@@ -88,36 +89,36 @@ UDC_DESC_STORAGE udi_api_t udi_api_cmsisdap = {
  * \name Internal routines
  */
 //@{
-bool udi_cmsisdap_enable(void)
+bool udi_swv_enable(void)
 {
-  if (!UDI_CMSISDAP_ENABLE_EXT()) {
+  if (!UDI_SWV_ENABLE_EXT()) {
     return false;
   }
   return true;
 }
 
 
-void udi_cmsisdap_disable(void)
+void udi_swv_disable(void)
 {
-  UDI_CMSISDAP_DISABLE_EXT();
+  UDI_SWV_DISABLE_EXT();
 }
 
-uint8_t udi_cmsisdap_getsetting(void)
+uint8_t udi_swv_getsetting(void)
 
 {
   return 0;
 }
 
-bool udi_cmsisdap_setup(void)
+bool udi_swv_setup(void)
 {
 	if (Udd_setup_is_in()) {
 		if (Udd_setup_type() == USB_REQ_TYPE_VENDOR) {
-			return UDI_CMSISDAP_SETUP_IN_RECEIVED();
+			return UDI_SWV_SETUP_IN_RECEIVED();
 		}
 	}
 	if (Udd_setup_is_out()) {
 		if (Udd_setup_type() == USB_REQ_TYPE_VENDOR) {
-			return UDI_CMSISDAP_SETUP_OUT_RECEIVED();
+			return UDI_SWV_SETUP_OUT_RECEIVED();
 		}
 	}
 	return false; // Not supported request
@@ -138,59 +139,10 @@ bool udi_cmsisdap_setup(void)
  *
  * \return \c 1 if function was successfully done, otherwise \c 0.
  */
-bool udi_cmsisdap_bulk_in_run(uint8_t * buf, iram_size_t buf_size,
+bool udi_swv_bulk_in_run(uint8_t * buf, iram_size_t buf_size,
 		udd_callback_trans_t callback)
 {
-	return udd_ep_run(UDI_CMSISDAP_EP_BULK_IN1,
-			false,
-			buf,
-			buf_size,
-			callback);
-}
-
-#ifdef UDI_CMSISDAP_EP_BULK_IN2
-
-/**
- * \brief Start a transfer on SWO bulk IN
- *
- * When the transfer is finished or aborted (stall, reset, ...), the \a callback is called.
- * The \a callback returns the transfer status and eventually the number of byte transfered.
- *
- * \param buf           Buffer on Internal RAM to send or fill.
- *                      It must be align, then use COMPILER_WORD_ALIGNED.
- * \param buf_size      Buffer size to send or fill
- * \param callback      NULL or function to call at the end of transfer
- *
- * \return \c 1 if function was successfully done, otherwise \c 0.
- */
-bool udi_cmsisdap_bulk_swo_in_run(uint8_t * buf, iram_size_t buf_size,
-		udd_callback_trans_t callback)
-{
-	return udd_ep_run(UDI_CMSISDAP_EP_BULK_IN2,
-			false,
-			buf,
-			buf_size,
-			callback);
-}
-#endif
-
-/**
- * \brief Start a transfer on bulk OUT
- *
- * When the transfer is finished or aborted (stall, reset, ...), the \a callback is called.
- * The \a callback returns the transfer status and eventually the number of byte transfered.
- *
- * \param buf           Buffer on Internal RAM to send or fill.
- *                      It must be align, then use COMPILER_WORD_ALIGNED.
- * \param buf_size      Buffer size to send or fill
- * \param callback      NULL or function to call at the end of transfer
- *
- * \return \c 1 if function was successfully done, otherwise \c 0.
- */
-bool udi_cmsisdap_bulk_out_run(uint8_t * buf, iram_size_t buf_size,
-		udd_callback_trans_t callback)
-{
-	return udd_ep_run(UDI_CMSISDAP_EP_BULK_OUT,
+	return udd_ep_run(UDI_SWV_EP_BULK_IN,
 			false,
 			buf,
 			buf_size,
@@ -198,3 +150,4 @@ bool udi_cmsisdap_bulk_out_run(uint8_t * buf, iram_size_t buf_size,
 }
 
 //@}
+#endif

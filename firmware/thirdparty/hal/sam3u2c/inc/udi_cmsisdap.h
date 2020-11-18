@@ -62,9 +62,6 @@ extern "C" {
 #ifndef UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS
   #error UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS must be defined in conf_usb.h
 #endif
-#ifndef UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS
-#error UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS must be defined in conf_usb.h
-#endif
 #endif
 
 #ifndef UDI_CMSISDAP_STRING_ID
@@ -92,6 +89,10 @@ extern UDC_DESC_STORAGE udi_api_t udi_api_cmsisdap;
  * \name Endpoint descriptors
  * @{
  */
+
+#ifdef UDI_CMSISDAP_EP_BULK_IN2
+
+  // ===================== DEFINITIONS FOR CASE OF WITH SWO ===============================
 
 # define UDI_CMSISDAP_EPS_BULK_DESC \
 	.ep_bulk_out.bLength               = sizeof(usb_ep_desc_t),\
@@ -122,13 +123,12 @@ extern UDC_DESC_STORAGE udi_api_t udi_api_cmsisdap;
 	.ep_bulk_in1.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS),\
 	.ep_bulk_in2.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS)
 
-
 //@}
 
 //! Interface descriptor structure for cmsisdap Class interface
 typedef struct {
 	usb_iface_desc_t iface0;
-	usb_ep_desc_t ep_bulk_out;	
+	usb_ep_desc_t ep_bulk_out;
 	usb_ep_desc_t ep_bulk_in1;
 	usb_ep_desc_t ep_bulk_in2;  
 } udi_cmsisdap_desc_t;
@@ -147,6 +147,58 @@ typedef struct {
 	.iface0.bInterfaceProtocol = VENDOR_PROTOCOL,\
 	.iface0.iInterface         = UDI_CMSISDAP_STRING_ID,\
 	UDI_CMSISDAP_EPS_BULK_DESC
+#else
+
+  // ===================== DEFINITIONS FOR CASE OF NO SWO ===============================
+
+# define UDI_CMSISDAP_EPS_BULK_DESC \
+	.ep_bulk_out.bLength               = sizeof(usb_ep_desc_t),\
+	.ep_bulk_out.bDescriptorType       = USB_DT_ENDPOINT,\
+	.ep_bulk_out.bEndpointAddress      = UDI_CMSISDAP_EP_BULK_OUT,\
+	.ep_bulk_out.bmAttributes          = USB_EP_TYPE_BULK,\
+	.ep_bulk_out.bInterval             = 0,\
+	.ep_bulk_in1.bLength               = sizeof(usb_ep_desc_t),\
+	.ep_bulk_in1.bDescriptorType       = USB_DT_ENDPOINT,\
+	.ep_bulk_in1.bEndpointAddress      = UDI_CMSISDAP_EP_BULK_IN1,\
+	.ep_bulk_in1.bmAttributes          = USB_EP_TYPE_BULK,\
+	.ep_bulk_in1.bInterval             = 0,\
+
+
+# define UDI_CMSISDAP_EPS_BULK_DESC_FS \
+	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_FS),\
+	.ep_bulk_in1.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_FS),\
+
+
+# define UDI_CMSISDAP_EPS_BULK_DESC_HS \
+	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_OUT_HS),\
+	.ep_bulk_in1.wMaxPacketSize        = LE16(UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS),\
+
+//@}
+
+//! Interface descriptor structure for cmsisdap Class interface
+typedef struct {
+	usb_iface_desc_t iface0;
+	usb_ep_desc_t ep_bulk_out;
+	usb_ep_desc_t ep_bulk_in1;
+} udi_cmsisdap_desc_t;
+
+#define UDI_CMSISDAP_EP_NB_BULK 2
+
+//! Content of cmsisdap interface descriptor for all speeds
+#define UDI_CMSISDAP_DESC      \
+	.iface0.bLength            = sizeof(usb_iface_desc_t),\
+	.iface0.bDescriptorType    = USB_DT_INTERFACE,\
+	.iface0.bInterfaceNumber   = UDI_CMSISDAP_IFACE_NUMBER,\
+	.iface0.bAlternateSetting  = 0,\
+	.iface0.bNumEndpoints      = 2,\
+	.iface0.bInterfaceClass    = VENDOR_CLASS,\
+	.iface0.bInterfaceSubClass = 0,\
+	.iface0.bInterfaceProtocol = VENDOR_PROTOCOL,\
+	.iface0.iInterface         = UDI_CMSISDAP_STRING_ID,\
+	UDI_CMSISDAP_EPS_BULK_DESC
+
+  // ======================= END OF DEFINITION OPTION ===============================
+#endif
 
 //! Content of cmsisdap interface descriptor for full speed only
 #define UDI_CMSISDAP_DESC_FS {\
@@ -189,6 +241,11 @@ typedef struct {
  */
 bool udi_cmsisdap_bulk_in_run(uint8_t * buf, iram_size_t buf_size,
 		udd_callback_trans_t callback);
+
+#ifdef UDI_CMSISDAP_EP_BULK_IN2
+bool udi_cmsisdap_bulk_swo_in_run(uint8_t * buf, iram_size_t buf_size,
+		udd_callback_trans_t callback);
+#endif
 
 /**
  * \brief Start a transfer on bulk OUT

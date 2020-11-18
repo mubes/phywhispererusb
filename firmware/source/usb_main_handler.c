@@ -31,6 +31,7 @@ bool usb_main_extra_string( void )
     static uint8_t udi_vendor_name[] = "Phywhisperer-USB CMSIS-DAP";
     static uint8_t udi_hid_generic[] = "CMSIS-DAP";
     static uint8_t udi_cmsisdapv2[] = "CMSIS-DAP v2";
+    static uint8_t udi_swv[] = "SWV Feed";
 
     struct extra_strings_desc_t
     {
@@ -65,6 +66,12 @@ bool usb_main_extra_string( void )
             DBG( "Request UDI_CMSISDAP_STRING_ID" EOL );
             str_lgt = sizeof( udi_cmsisdapv2 ) - 1;
             str = udi_cmsisdapv2;
+            break;
+
+        case UDI_SWV_STRING_ID: /* ------------------------------------------------- */
+            DBG( "Request UDI_SWV_STRING_ID" EOL );
+            str_lgt = sizeof( udi_swv ) - 1;
+            str = udi_swv;
             break;
 
         default: /* --------------------------------------------------------------- */

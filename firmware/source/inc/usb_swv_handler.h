@@ -16,18 +16,18 @@
  */
 
 
-#ifndef _USB_CMSISDAP_HANDLER_
-#define _USB_CMSISDAP_HANDLER_
+#ifndef _USB_SWV_HANDLER_
+#define _USB_SWV_HANDLER_
 
 /* ====================================================================================== */
 
-bool usb_cmsisdap_enable( void );
-void usb_cmsisdap_disable( void );
-bool usb_cmsisdap_setup_out_received( void );
-bool usb_cmsisdap_setup_in_received( void );
+bool usb_swv_enable( void );
+void usb_swv_disable( void );
+bool usb_swv_setup_out_received( void );
+bool usb_swv_setup_in_received( void );
 
-void usb_cmsisdap_swo_send( uint8_t c );
+void usb_swv_swo_send( uint8_t c );
 
 /* ====================================================================================== */
 
-#endif /* _USB_CMSISDAP_HANDLER_ */
+#endif /* _USB_SWV_HANDLER_ */

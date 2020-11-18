@@ -89,7 +89,7 @@ void genericsITMSendSint ( uint8_t c, uint16_t n )
 void genericsITMSendChar ( uint8_t c, char ch )
 
 {
-    _SendCharn( c, 1, (uint32_t *)&ch );
+    _SendCharn( c, 1, ( uint32_t * )&ch );
 }
 /* ====================================================================================== */
 void genericsReport( const char *fmt, ... )

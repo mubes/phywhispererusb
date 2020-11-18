@@ -26,6 +26,10 @@
 #define  USB_DEVICE_POWER                 500 // Consumption on Vbus line (mA)
 #define  USB_DEVICE_ATTR                  USB_CONFIG_ATTR_BUS_POWERED
 
+
+// Define to use separated SWV channel interface (otherwise combined with CMSIS-DAPv2 interface)
+#define SWV_SEPARATE
+
 //! USB Device string definitions
 
 extern char g_usb_serial_number[33];      /* Defined in main.c */
@@ -62,10 +66,16 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Control endpoint size
 #define  USB_DEVICE_EP_CTRL_SIZE       64
 
-//! Two interfaces for this device (Vendor + CMSISDAPv2 + HID(CMSISDAPv1))
+#ifndef SWV_SEPARATE
+//! Three interfaces for this device (Vendor + CMSISDAPv2 + HID(CMSISDAPv1))
 #define  USB_DEVICE_NB_INTERFACE       3
+#else
+//! Four interfaces for this device (Vendor + CMSISDAPv2 + HID(CMSISDAPv1) + SWV)
+#define  USB_DEVICE_NB_INTERFACE       4
+#endif
 
-//! 3 endpoints used by Vendor(2), CMSISDAPv2(3) and HID(1) interfaces (HID OUT in EP0)
+//! Endpoints used by Vendor(2), CMSISDAPv2(3) and HID(1) interfaces (HID OUT in EP0)
+//! or, for separated SWV, 2 by CMSISDAPv2 and 1 by SWV
 #  define  USB_DEVICE_MAX_EP           6
 
 // In HS mode, size of bulk endpoints are 512
@@ -182,7 +192,6 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #define UDI_CMSISDAP_EPS_SIZE_BULK_FS  64
 
 //! endpoints size for high speed
-#define xxUDI_CMSISDAP_EPS_SIZE_BULK_HS  64
 #define UDI_CMSISDAP_EPS_SIZE_BULK_OUT_HS 512
 #define UDI_CMSISDAP_EPS_SIZE_BULK_IN1_HS 512
 #define UDI_CMSISDAP_EPS_SIZE_BULK_IN2_HS 512
@@ -193,16 +202,48 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 //! Endpoint numbers definition
 #define  UDI_CMSISDAP_EP_BULK_OUT      (2 | USB_EP_DIR_OUT)
 #define  UDI_CMSISDAP_EP_BULK_IN1      (1 | USB_EP_DIR_IN)
+#ifndef SWV_SEPARATE
 #define  UDI_CMSISDAP_EP_BULK_IN2      (5 | USB_EP_DIR_IN)
+#endif
 
 //! Interface number
 #define  UDI_CMSISDAP_IFACE_NUMBER     2
 
 //@}
 
+#ifdef SWV_SEPARATE
+/**
+ * Configuration of third vendor interface (for SWV)
+ * @{
+ */
+//! Interface callback definition
+#define UDI_SWV_ENABLE_EXT()           usb_swv_enable()
+#define UDI_SWV_DISABLE_EXT()          usb_swv_disable()
+#define UDI_SWV_SETUP_OUT_RECEIVED()   usb_swv_setup_out_received()
+#define UDI_SWV_SETUP_IN_RECEIVED()    usb_swv_setup_in_received()
+
+//! endpoints size for full speed
+#define UDI_SWV_EPS_SIZE_BULK_FS  64
+
+//! endpoints size for high speed
+#define UDI_SWV_EPS_SIZE_BULK_IN_HS 512
+
+// String to describe interface
+#define UDI_SWV_STRING_ID         7
+
+//! Endpoint numbers definition
+#define  UDI_SWV_EP_BULK_IN            (5 | USB_EP_DIR_IN)
+#define  CMSIS_DAP_EP_SWO              UDI_SWV_EP_BULK_IN
+
+//! Interface number
+#define  UDI_SWV_IFACE_NUMBER     3
+
+//@}
+#endif
 
 //@}
 
+#ifndef SWV_SEPARATE
 /**
  * Description of Composite Device
  * @{
@@ -234,6 +275,42 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
         &udi_api_cmsisdap
         
 //@}
+#else
+/**
+ * Description of Composite Device including separate swv channel
+ * @{
+ */
+//! USB Interfaces descriptor structure
+#define UDI_COMPOSITE_DESC_T \
+        udi_vendor_desc_t      udi_vendor;      \
+        udi_hid_generic_desc_t udi_hid_generic; \
+        udi_cmsisdap_desc_t    udi_cmsisdap;    \
+        udi_swv_desc_t         udi_swv;
+
+//! USB Interfaces descriptor value for Full Speed
+#define UDI_COMPOSITE_DESC_FS \
+        .udi_vendor           = UDI_VENDOR_DESC_FS,     \
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC,   \
+        .udi_cmsisdap         = UDI_CMSISDAP_DESC_FS,   \
+        .udi_swv              = UDI_SWV_DESC_FS
+
+//! USB Interfaces descriptor value for High Speed
+#define UDI_COMPOSITE_DESC_HS \
+        .udi_vendor           = UDI_VENDOR_DESC_HS,     \
+        .udi_hid_generic      = UDI_HID_GENERIC_DESC,   \
+        .udi_cmsisdap         = UDI_CMSISDAP_DESC_HS,   \
+        .udi_swv              = UDI_SWV_DESC_HS
+
+//! USB Interface APIs
+#define UDI_COMPOSITE_API     \
+        &udi_api_vendor,      \
+        &udi_api_hid_generic, \
+        &udi_api_cmsisdap,    \
+        &udi_api_swv
+
+//@}
+
+#endif
 
 
 /**
@@ -247,6 +324,9 @@ extern char g_usb_serial_number[33];      /* Defined in main.c */
 #include "udi_vendor.h"
 #include "udi_hid_generic.h"
 #include "udi_cmsisdap.h"
+#ifdef SWV_SEPARATE
+#include "udi_swv.h"
+#endif
 #include "main.h"
 
 #endif // _CONF_USB_H_

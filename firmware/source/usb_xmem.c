@@ -19,6 +19,7 @@
 #include "usb_xmem.h"
 #include "led_states.h"
 #include "fpga_program.h"
+#include "generics.h"
 
 /* Access pointer for FPGA Interface */
 uint8_t volatile *xram = ( uint8_t * ) PSRAM_BASE_ADDRESS;
@@ -26,6 +27,17 @@ static volatile uint32_t fpgastore = 0;
 static volatile fpga_lockstatus_t _fpga_locked = fpga_unlocked;
 
 #define FPGA_ACCESS_GUARD_COUNT (10000)
+/* ====================================================================================== */
+void FPGA_reset( void )
+{
+    cpu_irq_enter_critical();
+    uint32_t storedAddr = fpgastore;
+    fpgastore = 0xFFFF;
+    gpio_set_pin_high( PIN_EBI_USB_SPARE0 );
+    gpio_set_pin_low( PIN_EBI_USB_SPARE0 );
+    FPGA_setaddr( storedAddr );
+    cpu_irq_leave_critical();
+}
 /* ====================================================================================== */
 int FPGA_setlock( fpga_lockstatus_t lockstatus )
 {
@@ -77,7 +89,7 @@ void FPGA_setaddr( uint32_t addr )
 {
     if ( fpgastore == addr )
     {
-        return;
+    //    return;
     }
 
     FPGA_ADDR_PORT->PIO_ODSR = ( FPGA_ADDR_PORT->PIO_ODSR & 0x40 ) | ( addr & 0x3F ) | ( ( addr & 0xC0 ) << 1 );
@@ -120,14 +132,9 @@ uint32_t safe_readuint32( uint16_t fpgaaddr )
     }
     while ( !try_enter_cs() );
 
-    uint32_t data;
-
-    FPGA_setaddr( fpgaaddr );
-    data = *xram;
-    data |= *( xram + 1 ) << 8;
-    data |= *( xram + 2 ) << 16;
-    data |= *( xram + 3 ) << 24;
+    uint32_t data = unsafe_readuint32( fpgaaddr );
     exit_cs();
+
     return data;
 }
 
@@ -269,11 +276,17 @@ bool check_fpga( void )
     uint8_t rxBuffer[4] = {0xff};
 
     /* Read FPGA build date */
-    safe_readbytes( FPGA_BUILD_TIME_REGISTER, rxBuffer, 4 );
+    safe_readbytes( FPGA_REG_BUILDTIME, rxBuffer, 4 );
 
     if ( rxBuffer[3] != 0xff )
     {
         led_states_set( ERROR_LED, ERROR_LED_OFF );
+        ERR( "FPGA Build: %d/%d/%d, %2d:%02d" EOL,    rxBuffer[3] >> 3,
+             ( ( rxBuffer[3] & 7 ) << 1 ) + ( rxBuffer[2] >> 7 ),
+             ( ( rxBuffer[2] >> 1 ) & 0x3f ),
+             ( ( rxBuffer[2] & 0x1 ) << 4 ) + ( rxBuffer[1] >> 4 ),
+             ( ( rxBuffer[1] & 0xf ) << 2 ) + ( rxBuffer[0] >> 6 ) );
+
     }
     else
     {
